@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 222 47% 7%;
+  --foreground: 210 40% 98%;
+  --card: 222 47% 9%;
+  --card-foreground: 210 40% 98%;
+  --border: 217 33% 17%;
+  --primary: 217 91% 60%;
+  --primary-foreground: 222 47% 11%;
+  --accent: 217 33% 17%;
+  --accent-foreground: 210 40% 98%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background-color: #080c14;
+  color: #f1f5f9;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+/* Custom Slim Scrollbars for Executive Feeds */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0b0f19;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(1000%); }
+}
+
+.animate-scanline {
+  animation: scanline 8s linear infinite;
+}

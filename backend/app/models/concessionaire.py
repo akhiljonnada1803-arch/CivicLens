@@ -17,3 +17,4 @@ class Concessionaire(Base):
     contact_person = Column(String(100), default="M. Raghunath (Fleet Ops)")
     contact_phone = Column(String(50), default="+91 94401 88204")
     created_at = Column(DateTime, default=datetime.utcnow)
+
