@@ -234,3 +234,4 @@ export const MunicipalDesk: React.FC<MunicipalDeskProps> = ({ incidents, onRefre
     </div>
   );
 };
+

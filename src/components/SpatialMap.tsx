@@ -207,3 +207,4 @@ export const SpatialMap: React.FC<SpatialMapProps> = ({
     </div>
   );
 };
+
