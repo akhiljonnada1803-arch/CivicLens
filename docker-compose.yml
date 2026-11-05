@@ -1,0 +1,66 @@
+version: '3.8'
+
+services:
+  # Spatial Database: PostgreSQL 16 + PostGIS 3.4
+  db:
+    image: postgis/postgis:16-3.4
+    container_name: civiclens-postgis
+    environment:
+      POSTGRES_DB: civiclens
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgis_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d civiclens"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Task Queue & Deduplication Sliding Window Cache
+  redis:
+    image: redis:7-alpine
+    container_name: civiclens-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # FastAPI Backend & GIS Ingestion Tier
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: civiclens-backend
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@db:5432/civiclens
+      - REDIS_URL=redis://redis:6379/0
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_DEFAULT_CHAT_ID=${TELEGRAM_DEFAULT_CHAT_ID:-}
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # Admin Operations Console UI (Next.js / React)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: civiclens-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgis_data:
+  redis_data:
+

@@ -1,0 +1,277 @@
+# Product Requirement Document (PRD)
+
+**Product Name:** CivicLens AI
+
+**Document Version:** 3.1 (Complete Specification with End-to-End Technology Stack)
+
+**Target Clients:** Municipal Corporations (e.g., GVMC), Public Transit Boards, Traffic Enforcement Wings
+
+---
+
+## 1. System Vision & Problem Statement
+
+### 1.1 The Operational Bottleneck
+
+* **In-Bin IoT Sensors:** Degrade within months from acidic leachate, rodent damage, and physical impacts during compactor emptying ($₹1.2\text{ Cr}+ \text{ CapEx per 5,000 bins}$).
+* **Citizen Reporting Apps:** Suffer from friction; citizens do not routinely photograph or touch dirty bins to scan QR stickers ($<3\% \text{ compliance}$).
+* **Central Grievance Portals:** Add bureaucratic delay with 24–72 hour resolution cycles for routine overflows.
+
+### 1.2 The CivicLens Solution
+
+CivicLens turns existing municipal vehicles (sweepers, waste tippers, transit buses) into autonomous civic auditors. A refurbished budget smartphone running on-device edge AI captures road conditions, classifies multiple municipal defects, checks local ward boundaries via Point-in-Polygon (PiP) GIS, and automatically pushes incident tickets to departmental Telegram channels in under 5 seconds.
+
+---
+
+## 2. End-to-End Technology Stack
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        EDGE CLIENT TIER (MOBILE)                       │
+│  Android 10+ (AOSP)  •  Kotlin  •  CameraX  •  FusedLocationProvider   │
+│  TFLite / ExecuTorch (INT8 YOLOv8n)  •  SmolLM-135M / MobileLLM        │
+│  Room DB (SQLite)  •  WorkManager (Offline Store-and-Forward)          │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ (Cellular HTTPS / WebP Batches)
+                                    ▼
+┌────────────────────────────────────────────────────────────────────────┐
+│                     BACKEND & GIS INGESTION TIER                       │
+│  FastAPI (Python 3.11)  •  Uvicorn  •  Pydantic v2                     │
+│  PostgreSQL 16 + PostGIS 3.4 (Spatial Deduplication & GeoJSON PiP)     │
+│  Redis 7 (Cooldown Caching & In-Memory Rate Limiting)                  │
+│  Celery / Background Tasks (Async Pipeline Processing)                 │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │
+         ┌──────────────────────────┴──────────────────────────┐
+         ▼                                                     ▼
+┌───────────────────────────────┐     ┌──────────────────────────────────┐
+│     ADMIN CONSOLE (WEB UI)    │     │       DISPATCH & CHANNELS        │
+│  Next.js 14 (App Router)      │     │  Telegram Bot API (python-telegram-bot)
+│  TypeScript  •  Tailwind CSS  │     │  Twilio / Fast2SMS (Emergency SMS)
+│  Leaflet.js / React-Leaflet   │     │  Municipal ERP REST Webhooks     │
+│  Shadcn/UI  •  Lucide Icons   │     │                                  │
+└───────────────────────────────┘     └──────────────────────────────────┘
+
+```
+
+| Layer | Technology | Primary Justification & Role |
+| --- | --- | --- |
+| **Edge OS & Hardware** | Android 10+ (AOSP) on Snapdragon / MediaTek SoC | Ubiquitous hardware platform, mature driver stack, built-in sensor abstraction. |
+| **Edge Mobile Core** | Kotlin, Android Jetpack, CameraX | Native camera sensor control, explicit exposure locks, background lifecycle handling. |
+| **Edge Vision Engine** | TensorFlow Lite / ExecuTorch (YOLOv8n / v11 INT8) | Sub-110ms inference per frame on budget mobile NPUs/GPUs ($\le 6\text{ MB}$ footprint). |
+| **Edge Context Engine** | SmolLM-135M or MobileLLM (4-bit quantized) | Runs purely offline on detection triggers to generate clean, structured event summaries. |
+| **Edge Persistence** | Android Room Database (SQLite) + WorkManager | Offline-first FIFO outbox queue; network-gated synchronization upon connectivity handoff. |
+| **Ingestion Backend** | Python 3.11, FastAPI, Uvicorn, Pydantic | High-throughput asynchronous REST gateway handling multi-part image and telemetry payloads. |
+| **Spatial Database** | PostgreSQL 16 + PostGIS 3.4 | Native geospatial queries (`ST_DWithin` for deduplication, `ST_Contains` for ward boundaries). |
+| **Task Queue & Cache** | Redis 7 + Celery | Alert rate-limiting, 12-hour deduplication sliding windows, and asynchronous webhook delivery. |
+| **Admin Operations UI** | Next.js 14, TypeScript, Tailwind CSS, Shadcn/UI | Responsive, fast, non-overwhelming two-pane incident review and dispatch portal. |
+| **Interactive Mapping** | Leaflet.js / React-Leaflet, OpenStreetMap tiles | Lightweight GIS map rendering without costly Google Maps API consumption fees. |
+| **Alert Dispatch** | Telegram Bot API, Python `httpx`, Twilio / SMS Gateway | Sub-second officer push notifications with inline proof snapshots and location deep links. |
+
+---
+
+## 3. Hardware PRD (Edge Vehicle Mount)
+
+```
+[ Vehicle 12V/24V Fuse Panel ]
+               │
+               ├── ACC / Ignition Line ──> [2A Fast-Blow Fuse] ──> [Add-a-Circuit Fuse Tap]
+               └── Ground (GND) ─────────> Chassis Bolt
+                                                  │
+                                                  ▼
+                                 [12V/24V to 5V 3A DC-DC Buck]
+                                                  │ (3m Shielded USB-C)
+                                                  ▼
+                                    [Refurbished Android Device]
+                                    • Snapdragon / Helio Processor
+                                    • 1080p Optical Sensor
+                                    • GNSS & 4G Modem
+                                                  │
+                                   [Screw-Clamp Suction Mount]
+
+```
+
+### 3.1 Bill of Materials (BOM per Vehicle)
+
+| Component | Target Spec / Model | Purpose | Unit Cost (INR) |
+| --- | --- | --- | --- |
+| **Compute & Sensor** | Refurbished Android Device (3–4 GB RAM, Android 10+, $\ge$ 1080p camera) | Runs edge vision, SLM verification, GPS polling, and cellular dispatch. | ₹2,800 – ₹3,200 |
+| **Power Converter** | 12V/24V to 5V 3A DC-DC Step-Down Buck Converter (Right-angle USB-C) | Converts vehicle alternator power to steady 5V DC; isolates against load spikes. | ₹250 – ₹350 |
+| **Circuit Tapping** | Mini/Standard Add-A-Circuit Fuse Tap + 2A Fuse | Direct tap into vehicle Accessory (ACC) circuit without altering original wiring. | ₹100 – ₹150 |
+| **Mounting Fixture** | Mechanical screw-clamp suction mount | Secures device to base of windshield; withstands vibrations and summer heat. | ₹250 – ₹350 |
+| **Cabling** | 3-meter 20 AWG shielded USB-C cable | Connects from cabin fuse tuck to windshield mount without voltage drop. | ₹150 |
+| **Total Hardware Cost** | — | — | **~₹3,550 – ₹4,200** |
+
+### 3.2 Electrical & Operating Logic
+
+1. **Ignition-Linked Power:**
+* **ACC ON (Vehicle Running):** 5V DC flows to phone; system wakes up or boots via `fastboot oem off-mode-charge 0`, acquires a partial CPU wakelock, and starts the detection loop.
+* **ACC OFF (Engine Stopped):** USB power cuts; `ACTION_POWER_DISCONNECTED` intent stops the camera session, flushes unsent queues, and puts the device to sleep.
+
+
+2. **Thermal & Battery Protection:**
+* **Display Off:** The app runs as an Android Foreground Service with the screen set to 0% brightness or blacked out, cutting internal operating heat by 40%.
+* **Thermal Throttling:**
+* $< 40^\circ\text{C}$: Standard sampling (1 frame every 1.5 seconds).
+* $40^\circ\text{C} - 45^\circ\text{C}$: Throttled mode (1 frame every 4.0 seconds).
+* $> 46^\circ\text{C}$: Camera inference halts; device sends a low-power telemetry alert and sleeps for 5 minutes.
+
+
+* **Stationary Detection Check:** If GNSS speed is $< 3\text{ km/h}$ (e.g., waiting at traffic signals), camera inference pauses to prevent duplicate frame processing.
+
+
+
+---
+
+## 4. Software PRD (Edge AI & Offline Sync)
+
+```
+[ Optical Feed: CameraX @ 1 FPS ]                 [ Telemetry: GPS & 3-Axis IMU ]
+                │                                                │
+                ▼                                                ├── Accel ≥ 4.5g ──> Emergency Crash Alert
+    [ Quantized Edge Detector ]                                  └── Speed > Limit ──> Fleet Overspeed Flag
+      (YOLOv8n / v11 INT8)                                               │
+                │                                                        │
+                ├── Conf < 0.70 ──> Frame Dropped (Zero Network Use)     │
+                │                                                        │
+                └── Conf ≥ 0.70 ─────────────────────────────────────────┘
+                                     │
+                                     ▼
+                      [ On-Device SLM Validator ]
+                      (SmolLM-135M / MobileLLM INT4)
+                      • Confirms visual context
+                      • Formats clean text summary
+                                     │
+                                     ▼
+                       [ Store-and-Forward Engine ]
+                       • Encodes frame to ~40 KB WebP
+                       • Records to SQLite / Room DB (Status: PENDING_SYNC)
+                                     │
+                                     ▼
+                       [ Android WorkManager Sync ]
+                                     │
+                     ┌───────────────┴───────────────┐
+                     ▼                               ▼
+               [ OFFLINE ]                      [ ONLINE ]
+          Keep in local SQLite;           Stream multipart batch to
+          retry on network handoff        Central Ingestion API (HTTP 200)
+                                                     │
+                                                     ▼
+                                          Purge media from device
+
+```
+
+### 4.1 Edge Inference Pipeline
+
+* **Vision Model:** YOLOv8n / YOLOv11n INT8 quantized ($\le 6\text{ MB}$).
+* **Execution Engine:** TFLite Runtime or ExecuTorch using mobile GPU/NPU delegates.
+* **Core Model Classes:**
+* `0: garbage_overflow` (Confidence threshold $\ge 0.70$)
+* `1: road_pothole` (Confidence threshold $\ge 0.75$)
+* `2: open_manhole` (Confidence threshold $\ge 0.85$ - High Priority)
+* `3: external_accident` (Confidence threshold $\ge 0.75$)
+* `4: illegal_banner` (Confidence threshold $\ge 0.75$)
+
+
+* **On-Device SLM Validator:**
+* Runs **only upon a positive vision detection** to validate context and generate plain-English summaries (e.g., *"Significant roadside waste overflow on lane shoulder, partially obstructing footpath"*).
+* Avoids thermal load by staying dormant during routine driving frames.
+
+
+
+### 4.2 Offline-First Storage Engine
+
+* **Local Database Schema (`incident_outbox`):**
+* `incident_id` (UUID, Primary Key)
+* `timestamp` (Unix Epoch Milliseconds)
+* `latitude`, `longitude` (Double, 6 decimal points)
+* `defect_type` (Enum: `GARBAGE`, `POTHOLE`, `MANHOLE`, `ACCIDENT`, `OVERSPEED`)
+* `confidence` (Float)
+* `slm_summary` (Text)
+* `image_path` (Internal storage URI)
+* `sync_status` (`PENDING`, `SYNCED`, `FAILED`)
+
+
+* **Data Lifecycle:** Images are compressed to 40–50 KB WebP files. Upon receiving an `HTTP 200 OK` from the server, the local image file is erased to avoid consuming device flash memory.
+
+---
+
+## 5. Backend Processing & Multi-Department Routing
+
+### 5.1 Ingestion API Specification
+
+* **Route:** `POST /api/v1/telemetry/incident`
+* **Payload Type:** `multipart/form-data`
+* **Form Fields:** `device_id`, `timestamp`, `lat`, `lon`, `defect_type`, `confidence`, `slm_summary`, `evidence_image` (Binary).
+
+### 5.2 Spatial Deduplication & Ward Matching
+
+1. **Deduplication Engine (PostGIS):**
+* Computes spatial proximity: `ST_DWithin(new_geom, existing_geom, 15.0)` for all unresolved tickets of the same `defect_type` logged within the last 12 hours.
+* **Match Found:** Updates recurrence count (`sighting_count += 1`), logs latest vehicle sighting, and suppresses new notifications to prevent alert fatigue.
+* **No Match:** Creates a new master incident record.
+
+
+2. **Point-in-Polygon (PiP) Ward Resolver:**
+* Maps coordinates using `ST_Contains(ward_polygon.geom, incident_point.geom)`.
+* Automatically resolves and tags `ward_id`, `zone_id`, and assigned departmental field units.
+
+
+
+### 5.3 Multi-Department Dispatch Matrix
+
+| Incident Type | Trigger Source | Target Department | Channel & SLA |
+| --- | --- | --- | --- |
+| **Vehicle Crash / Rollover** | IMU Deceleration Spike ($\ge 4.5g$) | Traffic Police & Emergency Medical (108) | Direct Webhook / SMS Dispatch ($< 5\text{ seconds}$) |
+| **Open Manhole / Missing Cover** | Vision Model ($\ge 0.85$ conf) | Water Supply & Sewerage Board | Emergency Dispatch Bot ($< 15\text{ minutes}$) |
+| **Waste Overflow / Blackspot** | Vision Model ($\ge 0.70$ conf) | Public Health & Sanitation | Ward Sanitary Inspector Telegram Bot ($< 2\text{ hours}$) |
+| **Pothole / Road Cave-in** | Vision Model ($\ge 0.75$ conf) | Roads & PWD Civil Wing | Municipal Work Order Queue ($48\text{ hours}$) |
+| **Fleet Driver Overspeeding** | Fused GNSS vs Speed Limits | Transit / Fleet Depot Management | Daily Driver Performance Audit |
+
+---
+
+## 6. Non-Overwhelming Admin Operations Console (UI/UX)
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│  CivicLens Command  •  Ward 14 Operations        [Zone 3 ▾] [Officer ▾]│
+├────────────────────────────────────────────────────────────────────────┤
+│  [ 🚨 2 Urgent Safety ]   [ ⚠️ 9 Sanitation/Roads ]   [ ✅ 28 Resolved ]│
+├───────────────────────────────────┬────────────────────────────────────┤
+│  INCIDENT FEED (Simple Cards)     │  LIVE WARD MAP & INSPECTION        │
+│                                   │                                    │
+│  [⚠️ Garbage Overflow]            │   ┌───────────────────────────┐    │
+│  Main Market Road, Pillar 42      │   │   [Ward 14 Boundary Map]  │    │
+│  Spotted by Sweeper #04 • 8m ago  │   │     • Blue = Fleet (12)   │    │
+│  Status: Needs Action             │   │     • Red  = Alerts (11)  │    │
+│  [Send to Inspector]              │   └───────────────────────────┘    │
+│                                   │                                    │
+│  [🚨 Open Manhole Hazard]         │  SELECTED INCIDENT INSPECTION      │
+│  Station Road Junction            │  • Photo Evidence (AI Bounding Box)│
+│  Spotted by Bus #12 • 14m ago     │  • "Roadside waste partially       │
+│  Status: QRT Dispatched           │     blocking pedestrian walkway"   │
+│  [View Details]                   │  • 17.7225° N, 83.3045° E (Maps)   │
+│                                   │  • Spotted 2x in past 4 hours      │
+│  [🚗 Vehicle Collision]           │                                    │
+│  Bypass Flyover Descent           │  [ 📲 Dispatch to Telegram Bot ]   │
+│  Spotted by Tipper #02 • 21m ago  │  [ ✓ Mark Resolved / False Alarm ] │
+└───────────────────────────────────┴────────────────────────────────────┘
+
+```
+
+### 6.1 Design Constraints
+
+* **Anti-Overwhelm Principle:** Replaces raw telemetry tables with prioritized card feeds and two-click dispatch actions.
+* **Clear Plain-Language Labels:** Uses direct terminology (*"Spotted by"*, *"Photo Evidence"*, *"Needs Action"*) rather than technical internal states.
+* **Two-Pane Operational Workflow:** Officers select an alert card on the left pane and review the map, verified photo proof, and dispatch actions on the right pane.
+
+---
+
+## 7. Target Performance & Success Metrics
+
+| Dimension | Target Metric | Validation Method |
+| --- | --- | --- |
+| **Edge Vision Latency** | $\le 110\text{ ms}$ per processed frame | Measured with on-device TFLite benchmark tools. |
+| **Cellular Data Usage** | $< 10\text{ MB}$ per vehicle per 8-hour shift | Monitored via Android NetworkStatsManager. |
+| **Dispatch Latency** | $< 4.0\text{ seconds}$ from capture to Telegram alert | Network logging under standard 4G connectivity. |
+| **Spatial Deduplication** | $\ge 96\%$ suppression of duplicate alerts | Field testing via multiple passes over identical road markers. |
+| **System CapEx Savings** | $> 90\%$ lower CapEx than stationary IoT bin systems | Financial audit: $\approx ₹95,000$ for 25 vehicles vs. $₹1.4\text{ Cr}$ for 5,000 bin sensors. |

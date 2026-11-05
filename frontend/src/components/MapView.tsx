@@ -1,0 +1,204 @@
+import React, { useEffect, useMemo } from 'react';
+import { MapContainer, TileLayer, Polygon, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import { Incident, FleetVehicle, Ward } from '../types';
+import { Truck, Bus, Car, AlertTriangle, AlertOctagon, CheckCircle2 } from 'lucide-react';
+
+interface MapViewProps {
+  incidents: Incident[];
+  fleet: FleetVehicle[];
+  ward: Ward | null;
+  selectedIncident: Incident | null;
+  onSelectIncident: (incident: Incident) => void;
+}
+
+// Controller component to smoothly fly to selected incident or ward
+const MapController: React.FC<{ selectedIncident: Incident | null; ward: Ward | null }> = ({
+  selectedIncident,
+  ward
+}) => {
+  const map = useMap();
+
+  useEffect(() => {
+    if (selectedIncident) {
+      map.flyTo([selectedIncident.latitude, selectedIncident.longitude], 16, {
+        animate: true,
+        duration: 1.0
+      });
+    } else if (ward) {
+      map.flyTo([ward.center_lat, ward.center_lon], 14, {
+        animate: true,
+        duration: 1.0
+      });
+    }
+  }, [selectedIncident, ward, map]);
+
+  return null;
+};
+
+// Custom icons generator using Leaflet DivIcon
+const createIncidentIcon = (incident: Incident, isSelected: boolean) => {
+  const isUrgent = incident.urgency === 'URGENT_SAFETY';
+  const isResolved = incident.status === 'RESOLVED';
+
+  let bgClass = 'bg-amber-500 border-amber-300';
+  let pulseClass = '';
+  if (isResolved) {
+    bgClass = 'bg-emerald-500 border-emerald-300';
+  } else if (isUrgent) {
+    bgClass = 'bg-rose-500 border-rose-300';
+    pulseClass = 'animate-ping';
+  }
+
+  const ringClass = isSelected ? 'ring-4 ring-blue-400 scale-125 z-50' : 'ring-2 ring-slate-900';
+
+  return L.divIcon({
+    className: 'custom-incident-pin',
+    html: `
+      <div class="relative flex items-center justify-center w-7 h-7">
+        ${!isResolved ? `<span class="absolute inline-flex h-full w-full rounded-full ${bgClass} opacity-75 ${pulseClass}"></span>` : ''}
+        <div class="relative w-6 h-6 rounded-full ${bgClass} ${ringClass} flex items-center justify-center text-white shadow-lg text-xs font-bold transition-transform">
+          ${isUrgent ? '🚨' : isResolved ? '✓' : '⚠️'}
+        </div>
+      </div>
+    `,
+    iconSize: [28, 28],
+    iconAnchor: [14, 14]
+  });
+};
+
+const createFleetIcon = (vehicle: FleetVehicle) => {
+  const isSweeper = vehicle.vehicle_type === 'SWEEPER';
+  const isBus = vehicle.vehicle_type === 'TRANSIT_BUS';
+  const emoji = isSweeper ? '🧹' : isBus ? '🚌' : '🚛';
+
+  return L.divIcon({
+    className: 'custom-fleet-pin',
+    html: `
+      <div class="flex items-center space-x-1 bg-slate-900/90 text-blue-400 border border-blue-500/60 rounded-full px-2 py-0.5 shadow-md shadow-blue-900/40 select-none">
+        <span class="text-xs">${emoji}</span>
+        <span class="text-[10px] font-bold text-slate-200 tracking-tight">${vehicle.label.split(' ')[0]}</span>
+      </div>
+    `,
+    iconSize: [80, 24],
+    iconAnchor: [40, 12]
+  });
+};
+
+export const MapView: React.FC<MapViewProps> = ({
+  incidents,
+  fleet,
+  ward,
+  selectedIncident,
+  onSelectIncident
+}) => {
+  // Parse Ward Polygon
+  const polygonPositions = useMemo(() => {
+    if (!ward) return [];
+    try {
+      const geo = JSON.parse(ward.polygon_geojson);
+      if (geo.type === 'Polygon' && geo.coordinates && geo.coordinates[0]) {
+        // GeoJSON is [lon, lat], Leaflet needs [lat, lon]
+        return geo.coordinates[0].map(([lon, lat]: [number, number]) => [lat, lon]);
+      }
+    } catch (e) {
+      console.error('Failed to parse ward polygon:', e);
+    }
+    return [];
+  }, [ward]);
+
+  const defaultCenter: [number, number] = ward ? [ward.center_lat, ward.center_lon] : [17.7225, 83.3045];
+
+  return (
+    <div className="relative w-full h-full min-h-[300px] flex-1 bg-slate-950">
+      {/* Map Legend & Stats Overlay */}
+      <div className="absolute top-3 left-3 z-[1000] bg-slate-900/90 backdrop-blur-md px-3 py-2 rounded-lg border border-slate-800 text-xs text-slate-300 shadow-xl pointer-events-auto">
+        <div className="font-semibold text-white mb-1.5 flex items-center space-x-1.5">
+          <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+          <span>Ward 14 Boundary Map</span>
+        </div>
+        <div className="flex items-center space-x-3 text-[11px]">
+          <span className="flex items-center space-x-1 text-blue-400">
+            <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+            <span>Blue = Fleet ({fleet.length})</span>
+          </span>
+          <span className="flex items-center space-x-1 text-rose-400">
+            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
+            <span>Red = Alerts ({incidents.filter(i => i.status !== 'RESOLVED').length})</span>
+          </span>
+        </div>
+      </div>
+
+      <MapContainer
+        center={defaultCenter}
+        zoom={14}
+        className="w-full h-full"
+        zoomControl={false}
+      >
+        <MapController selectedIncident={selectedIncident} ward={ward} />
+
+        {/* CartoDB Dark Matter Tiles */}
+        <TileLayer
+          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+          maxZoom={19}
+        />
+
+        {/* Ward 14 Boundary Polygon */}
+        {polygonPositions.length > 0 && (
+          <Polygon
+            positions={polygonPositions}
+            pathOptions={{
+              color: '#38bdf8',
+              weight: 2,
+              fillColor: '#0284c7',
+              fillOpacity: 0.12,
+              dashArray: '5, 5'
+            }}
+          />
+        )}
+
+        {/* Fleet Vehicles Markers */}
+        {fleet.map((v) => (
+          <Marker
+            key={v.id}
+            position={[v.current_lat, v.current_lon]}
+            icon={createFleetIcon(v)}
+          >
+            <Popup>
+              <div className="text-xs p-1 space-y-1">
+                <div className="font-bold text-blue-400 text-sm">{v.label}</div>
+                <div className="text-slate-300">Reg: {v.registration_no}</div>
+                <div className="text-slate-300">Speed: {v.speed_kmh} km/h</div>
+                <div className="text-slate-300">SoC Temp: {v.battery_temp_c}°C ({v.thermal_state})</div>
+                <div className="text-emerald-400 font-semibold">{v.status}</div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+
+        {/* Incident Markers */}
+        {incidents.map((inc) => (
+          <Marker
+            key={inc.id}
+            position={[inc.latitude, inc.longitude]}
+            icon={createIncidentIcon(inc, selectedIncident?.id === inc.id)}
+            eventHandlers={{
+              click: () => onSelectIncident(inc)
+            }}
+          >
+            <Popup>
+              <div className="text-xs p-1 max-w-[200px] space-y-1">
+                <div className="font-bold text-white">{inc.title}</div>
+                <div className="text-slate-400">{inc.landmark}</div>
+                <div className="text-slate-300">Spotted by: {inc.spotted_by_label}</div>
+                <div className="text-amber-400 font-semibold">Sightings: {inc.sighting_count}x</div>
+              </div>
+            </Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
+  );
+};
+

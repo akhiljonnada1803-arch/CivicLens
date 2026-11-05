@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0F172A">
+
+    <!-- CameraX Live Preview (Darkened/0% screen brightness during background operation) -->
+    <androidx.camera.view.PreviewView
+        android:id="@+id/cameraPreview"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toTopOf="@+id/bottomControlCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Top HUD Overlay: Vehicle, Ward, and Thermal Telemetry -->
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_margin="16dp"
+        android:background="#D00B1120"
+        android:orientation="vertical"
+        android:padding="12dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tvVehicleTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="CivicLens AI • Sweeper #04"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tvWardLocation"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="GVMC Ward 14 • GNSS Speed: 18.2 km/h"
+            android:textColor="#38BDF8"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tvThermalStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="SoC Temp: 36.8°C (Normal Cadence 1.5s)"
+            android:textColor="#10B981"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- Bottom Controls Card -->
+    <LinearLayout
+        android:id="@+id/bottomControlCard"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="#1E293B"
+        android:orientation="vertical"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <TextView
+            android:id="@+id/tvOutboxCount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Room DB Outbox: 0 pending store-and-forward"
+            android:textColor="#94A3B8"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/btnTogglePatrol"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:backgroundTint="#2563EB"
+            android:text="Start Edge Patrol Service"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+
+        <Button
+            android:id="@+id/btnFlushOutbox"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:backgroundTint="#334155"
+            android:text="Flush Outbox Queue to Server"
+            android:textColor="#E2E8F0" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
+

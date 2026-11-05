@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">CivicLens Edge</string>
+    <string name="start_patrol">Start Edge Patrol</string>
+    <string name="stop_patrol">Stop Edge Patrol</string>
+    <string name="sync_now">Flush Outbox Queue</string>
+</resources>
+
