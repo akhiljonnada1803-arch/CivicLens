@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { MapContainer, TileLayer, Polygon, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { Incident, FleetVehicle, Ward } from '../types';
-import { Truck, Bus, Car, AlertTriangle, AlertOctagon, CheckCircle2 } from 'lucide-react';
+import { Truck, Bus, Car, AlertTriangle, AlertOctagon, CheckCircle2, Layers } from 'lucide-react';
 
 interface MapViewProps {
   incidents: Incident[];
@@ -11,6 +11,26 @@ interface MapViewProps {
   selectedIncident: Incident | null;
   onSelectIncident: (incident: Incident) => void;
 }
+
+type MapTheme = 'dark' | 'streets' | 'satellite';
+
+const MAP_LAYERS: Record<MapTheme, { url: string; attribution: string; maxZoom: number }> = {
+  dark: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+    maxZoom: 16
+  },
+  streets: {
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics',
+    maxZoom: 18
+  }
+};
 
 // Controller component to smoothly fly to selected incident or ward
 const MapController: React.FC<{ selectedIncident: Incident | null; ward: Ward | null }> = ({
@@ -92,6 +112,8 @@ export const MapView: React.FC<MapViewProps> = ({
   selectedIncident,
   onSelectIncident
 }) => {
+  const [theme, setTheme] = useState<MapTheme>('dark');
+
   // Parse Ward Polygon
   const polygonPositions = useMemo(() => {
     if (!ward) return [];
@@ -129,6 +151,23 @@ export const MapView: React.FC<MapViewProps> = ({
         </div>
       </div>
 
+      {/* Map Style Selector Overlay (Zero API Keys) */}
+      <div className="absolute top-3 right-3 z-[1000] bg-slate-900/90 backdrop-blur-md p-1 rounded-lg border border-slate-800 text-xs text-slate-300 shadow-xl flex items-center space-x-1 pointer-events-auto">
+        {(['dark', 'streets', 'satellite'] as MapTheme[]).map((t) => (
+          <button
+            key={t}
+            onClick={() => setTheme(t)}
+            className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-colors capitalize ${
+              theme === t
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800'
+            }`}
+          >
+            {t === 'dark' ? '🌓 Dark' : t === 'streets' ? '🗺️ Streets' : '🛰️ Satellite'}
+          </button>
+        ))}
+      </div>
+
       <MapContainer
         center={defaultCenter}
         zoom={14}
@@ -137,11 +176,12 @@ export const MapView: React.FC<MapViewProps> = ({
       >
         <MapController selectedIncident={selectedIncident} ward={ward} />
 
-        {/* CartoDB Dark Matter Tiles */}
+        {/* 100% Free, Public, Open Tiles (NO Watermark, Zero API Key Required) */}
         <TileLayer
-          attribution='&copy; <a href="https://carto.com/">CARTO</a>'
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          maxZoom={19}
+          key={theme}
+          attribution={MAP_LAYERS[theme].attribution}
+          url={MAP_LAYERS[theme].url}
+          maxZoom={MAP_LAYERS[theme].maxZoom}
         />
 
         {/* Ward 14 Boundary Polygon */}
