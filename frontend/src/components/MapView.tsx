@@ -88,20 +88,24 @@ const createIncidentIcon = (incident: Incident, isSelected: boolean) => {
 };
 
 const createFleetIcon = (vehicle: FleetVehicle) => {
-  const isSweeper = vehicle.vehicle_type === 'SWEEPER';
+  const isFleetB = vehicle.fleet_type === 'FLEET_B_CLEANER' || vehicle.vehicle_type === 'TIPPER';
   const isBus = vehicle.vehicle_type === 'TRANSIT_BUS';
-  const emoji = isSweeper ? '🧹' : isBus ? '🚌' : '🚛';
+  const emoji = isFleetB ? '🚚' : isBus ? '🚌' : '🧹';
+  const borderColor = isFleetB ? 'border-amber-500/80' : 'border-blue-500/60';
+  const tagColor = isFleetB ? 'text-amber-300' : 'text-blue-300';
+  const fleetTag = isFleetB ? 'B:Cleaner' : 'A:Scanner';
 
   return L.divIcon({
     className: 'custom-fleet-pin',
     html: `
-      <div class="flex items-center space-x-1 bg-slate-900/90 text-blue-400 border border-blue-500/60 rounded-full px-2 py-0.5 shadow-md shadow-blue-900/40 select-none">
+      <div class="flex items-center space-x-1.5 bg-slate-950/95 ${tagColor} border ${borderColor} rounded-full px-2.5 py-0.5 shadow-lg select-none">
         <span class="text-xs">${emoji}</span>
-        <span class="text-[10px] font-bold text-slate-200 tracking-tight">${vehicle.label.split(' ')[0]}</span>
+        <span class="text-[10px] font-bold text-slate-100">${vehicle.label.replace(' (Fleet B)', '').replace(' (APSRTC)', '')}</span>
+        <span class="text-[9px] px-1 rounded ${isFleetB ? 'bg-amber-500/30 text-amber-200' : 'bg-blue-500/30 text-blue-200'} font-mono">${fleetTag}</span>
       </div>
     `,
-    iconSize: [80, 24],
-    iconAnchor: [40, 12]
+    iconSize: [110, 26],
+    iconAnchor: [55, 13]
   });
 };
 

@@ -23,6 +23,10 @@ class FleetVehicleResponse(BaseModel):
     vehicle_type: str
     registration_no: str
     ward_id: str
+    fleet_type: Optional[str] = "FLEET_A_SCANNER"
+    has_rear_camera: Optional[bool] = False
+    assigned_route_id: Optional[str] = "Route #14B - Siripuram"
+    concessionaire_name: Optional[str] = "Apex CleanTech"
     current_lat: float
     current_lon: float
     speed_kmh: float

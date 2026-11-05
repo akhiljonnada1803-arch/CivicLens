@@ -38,6 +38,22 @@ class IncidentResponse(BaseModel):
     ward_name: Optional[str] = None
     assigned_department: str
     channel_sla: str
+    
+    # PRD v4.0 Closed-Loop & Contractor Fields
+    concessionaire_id: Optional[str] = "CONC-APEX"
+    concessionaire_name: Optional[str] = "Apex CleanTech"
+    work_state: Optional[str] = "OPEN"
+    before_image_url: Optional[str] = None
+    after_image_url: Optional[str] = None
+    arrived_at: Optional[datetime] = None
+    cleared_at: Optional[datetime] = None
+    dwell_duration_sec: Optional[int] = None
+    cleaning_tipper_id: Optional[str] = None
+    billing_credit_approved: Optional[bool] = False
+    penalty_amount_inr: Optional[float] = 0.0
+    is_redump_dispute: Optional[bool] = False
+    redump_notes: Optional[str] = None
+    
     first_sighting_at: datetime
     last_sighting_at: datetime
     sighting_count: int
@@ -79,3 +95,22 @@ class TelemetryIngestResponse(BaseModel):
     landmark: Optional[str] = None
     latitude: float = 0.0
     longitude: float = 0.0
+
+class ClosedLoopArrivalRequest(BaseModel):
+    incident_id: str
+    tipper_id: str
+    latitude: float
+    longitude: float
+
+class ClosedLoopClosureRequest(BaseModel):
+    incident_id: str
+    tipper_id: str
+    dwell_duration_sec: int = 180
+    clean_confidence: float = 0.92
+    residual_waste_detected: bool = False
+
+class RedumpAppealRequest(BaseModel):
+    incident_id: str
+    concessionaire_id: str = "CONC-APEX"
+    defense_notes: str
+

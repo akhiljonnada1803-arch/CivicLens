@@ -42,53 +42,100 @@ export const AnalyticsModal: React.FC<AnalyticsModalProps> = ({
         {/* Body Content */}
         <div className="p-6 space-y-6 overflow-y-auto max-h-[75vh]">
           {/* CapEx Comparison Banner */}
-          <div className="bg-gradient-to-r from-emerald-950/60 to-slate-950 p-4 rounded-xl border border-emerald-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="bg-gradient-to-r from-emerald-950/70 to-slate-950 p-5 rounded-xl border border-emerald-800/50 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div>
               <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 block mb-1">
-                CapEx Reduction vs Stationary IoT Bin Sensors
+                GVMC 98-Ward Municipal Financial Impact (PRD Section 7)
               </span>
               <div className="text-2xl font-black text-white font-mono flex items-center space-x-2">
-                <span>99.3% CapEx Savings</span>
-                <span className="text-xs font-semibold px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Target &gt;90%
+                <span>₹20.52 Cr / year</span>
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Audited Municipal Savings
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1">
-                ₹95,000 for 25 fleet vehicles vs ₹1,40,00,000 (₹1.4 Cr) for 5,000 IoT bin sensors.
+                City-wide deployment CapEx: <span className="text-emerald-400 font-bold">₹8.81 Lakhs</span> (120 Fleet A + 50 Fleet B units) vs ₹24+ Cr baseline waste & road spending.
               </p>
             </div>
-            <div className="text-right sm:border-l sm:border-emerald-800/40 sm:pl-4">
-              <div className="text-xs text-slate-400">Net Municipal Savings</div>
-              <div className="text-xl font-bold text-emerald-400 font-mono">₹1.39 Cr</div>
+            <div className="text-right sm:border-l sm:border-emerald-800/40 sm:pl-5">
+              <div className="text-xs text-slate-400">Total City-Wide CapEx</div>
+              <div className="text-xl font-bold text-emerald-400 font-mono">₹8.81 Lakhs</div>
+              <div className="text-[10px] text-slate-500 mt-0.5">Annual OpEx: ₹2.96 Lakhs</div>
             </div>
           </div>
 
-          {/* BOM Breakdown */}
+          {/* Fleet A vs Fleet B Industrial BOM */}
           <div>
             <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center space-x-1.5">
               <Smartphone className="w-4 h-4 text-blue-400" />
-              <span>Edge Vehicle Mount Bill of Materials (BOM per Vehicle)</span>
+              <span>Fleet Instrument Sizing & Industrial Hardware BOM (Rockchip RV1126 + Ultracaps)</span>
             </h4>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                <span className="text-[10px] text-slate-500 block">Refurbished Android Device</span>
-                <span className="font-bold text-white text-sm">₹2,800 – ₹3,200</span>
-                <span className="text-[10px] text-slate-400 block mt-1">1080p Optical + GNSS</span>
+            <div className="grid grid-cols-2 gap-3 text-xs">
+              <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-blue-400 text-sm">Fleet A: The Scanners</span>
+                  <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 text-[10px] font-mono">120 Units</span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">100 APSRTC City Buses + 20 Police PCR Vans</p>
+                <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between font-mono">
+                  <span className="text-slate-400">Unit Cost: ₹4,800</span>
+                  <span className="text-white font-bold">Total: ₹5,76,000</span>
+                </div>
+                <span className="text-[10px] text-slate-500 block mt-1">Single forward 1080p STARVIS lens • Hardwired ACC wake</span>
               </div>
-              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                <span className="text-[10px] text-slate-500 block">12/24V to 5V 3A Buck</span>
-                <span className="font-bold text-white text-sm">₹250 – ₹350</span>
-                <span className="text-[10px] text-slate-400 block mt-1">Isolates load spikes</span>
+
+              <div className="bg-slate-950 p-3.5 rounded-lg border border-slate-800">
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-amber-400 text-sm">Fleet B: The Cleaners</span>
+                  <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-mono">50 Units</span>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">Dedicated Ward Quick-Response Tippers (~1 per 2 wards)</p>
+                <div className="mt-2.5 pt-2 border-t border-slate-800/80 flex items-center justify-between font-mono">
+                  <span className="text-slate-400">Unit Cost: ₹6,100</span>
+                  <span className="text-white font-bold">Total: ₹3,05,000</span>
+                </div>
+                <span className="text-[10px] text-slate-500 block mt-1">Front lens + IP67 rear aux lens with 6m shielded cable</span>
               </div>
-              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                <span className="text-[10px] text-slate-500 block">Add-A-Circuit Fuse Tap</span>
-                <span className="font-bold text-white text-sm">₹100 – ₹150</span>
-                <span className="text-[10px] text-slate-400 block mt-1">ACC ignition tap</span>
+            </div>
+          </div>
+
+          {/* Audited Municipal Savings Projections Table */}
+          <div>
+            <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center space-x-1.5">
+              <Zap className="w-4 h-4 text-emerald-400" />
+              <span>Audited Annual Municipal Savings Projections (Section 7.3)</span>
+            </h4>
+            <div className="space-y-2 text-xs">
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <div>
+                  <span className="font-semibold text-white">Contractor Ghost-Billing Recovery</span>
+                  <span className="text-[11px] text-slate-400 block">Complete recovery of unperformed trips via mandatory Before/After proof</span>
+                </div>
+                <span className="font-mono font-bold text-emerald-400 text-sm">₹8.50 Crore / yr</span>
               </div>
-              <div className="bg-slate-950 p-3 rounded-lg border border-slate-800">
-                <span className="text-[10px] text-slate-500 block">Total Unit Hardware</span>
-                <span className="font-bold text-emerald-400 text-sm">~₹3,800</span>
-                <span className="text-[10px] text-slate-400 block mt-1">Zero maintenance</span>
+
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <div>
+                  <span className="font-semibold text-white">Eliminated In-Bin Static IoT Sensors</span>
+                  <span className="text-[11px] text-slate-400 block">Zero recurring CapEx & replacement for ultrasonic/RFID bin sensors</span>
+                </div>
+                <span className="font-mono font-bold text-emerald-400 text-sm">₹4.50 Crore / yr</span>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <div>
+                  <span className="font-semibold text-white">Fleet Fuel & Dead Mileage Reduction</span>
+                  <span className="text-[11px] text-slate-400 block">18% route optimization via dynamic bus-guided detours vs blind circular routes</span>
+                </div>
+                <span className="font-mono font-bold text-emerald-400 text-sm">₹4.32 Crore / yr</span>
+              </div>
+
+              <div className="flex items-center justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800">
+                <div>
+                  <span className="font-semibold text-white">Secondary Dumps & Emergency JCB Rental</span>
+                  <span className="text-[11px] text-slate-400 block">Intercepting 1:00 PM market spikes before expanding into massive blackspots</span>
+                </div>
+                <span className="font-mono font-bold text-emerald-400 text-sm">₹3.20 Crore / yr</span>
               </div>
             </div>
           </div>

@@ -226,3 +226,143 @@ def reset_simulation_data(
     seed_initial_data(db)
     return {"status": "success", "message": "Database reset and seeded with GVMC Ward 14 benchmark data."}
 
+@router.post("/closed-loop/simulate-arrival")
+def simulate_tipper_arrival(db: Session = Depends(get_db)):
+    """
+    PRD Section 5.2 - State 1 Simulation:
+    Tipper #04 (Fleet B) arrives within 10m of open Market Road overflow.
+    Front Camera logs 'BEFORE' proof, changes state to WORK_IN_PROGRESS.
+    """
+    incident = db.query(Incident).filter(
+        Incident.defect_type == DefectType.GARBAGE_OVERFLOW.value,
+        Incident.status == IncidentStatus.NEEDS_ACTION.value
+    ).first()
+
+    if not incident:
+        # If no open garbage ticket, pick any open or create one
+        incident = db.query(Incident).filter(Incident.status == IncidentStatus.NEEDS_ACTION.value).first()
+
+    if not incident:
+        return {"status": "error", "message": "No active open incident found to clean. Please trigger milestone [1] first!"}
+
+    before_url, _ = StorageService.generate_closed_loop_proof_images(
+        tipper_id="AP-31-TT-4402",
+        landmark=incident.landmark or "Main Market Road, Pillar 42"
+    )
+
+    incident.work_state = "WORK_IN_PROGRESS"
+    incident.status = IncidentStatus.QRT_DISPATCHED.value
+    incident.cleaning_tipper_id = "AP-31-TT-4402"
+    incident.arrived_at = datetime.utcnow()
+    incident.before_image_url = before_url
+    incident.dwell_duration_sec = 0
+    db.commit()
+
+    return {
+        "status": "success",
+        "state": "WORK_IN_PROGRESS",
+        "ticket_id": incident.id,
+        "landmark": incident.landmark,
+        "vehicle": "Tipper #04 (AP-31-TT-4402)",
+        "before_image_url": before_url,
+        "message": f"State 1 Confirmed: Tipper AP-31-TT-4402 arrived within 10m of {incident.landmark}. Front camera logged BEFORE proof. Dwell timer started."
+    }
+
+@router.post("/closed-loop/simulate-closure")
+def simulate_tipper_closure(db: Session = Depends(get_db)):
+    """
+    PRD Section 5.2 - State 3 Simulation:
+    Tipper #04 pulls forward 15 meters after loading.
+    Rear aux camera automatically inspects curb: verified clean -> CLOSED_VERIFIED + 100% Billing Credit.
+    """
+    incident = db.query(Incident).filter(
+        Incident.work_state == "WORK_IN_PROGRESS"
+    ).first()
+
+    if not incident:
+        incident = db.query(Incident).filter(
+            Incident.defect_type == DefectType.GARBAGE_OVERFLOW.value
+        ).first()
+
+    if not incident:
+        return {"status": "error", "message": "No ticket in progress. Run arrival milestone first!"}
+
+    _, after_url = StorageService.generate_closed_loop_proof_images(
+        tipper_id="AP-31-TT-4402",
+        landmark=incident.landmark or "Main Market Road, Pillar 42"
+    )
+
+    incident.work_state = "CLOSED_VERIFIED"
+    incident.status = IncidentStatus.RESOLVED.value
+    incident.cleared_at = datetime.utcnow()
+    incident.after_image_url = after_url
+    incident.dwell_duration_sec = 180 # 3 minutes dwell
+    incident.billing_credit_approved = True
+    incident.penalty_amount_inr = 0.0
+    db.commit()
+
+    return {
+        "status": "success",
+        "state": "CLOSED_VERIFIED",
+        "ticket_id": incident.id,
+        "landmark": incident.landmark,
+        "dwell_time": "3 mins (180s)",
+        "after_image_url": after_url,
+        "credit": "100% Billing Credit Approved",
+        "message": f"Autonomous Closure Complete! Rear camera verified clean pavement. 100% billing credit approved for Apex CleanTech."
+    }
+
+@router.post("/closed-loop/simulate-ghost-billing")
+def simulate_ghost_billing(db: Session = Depends(get_db)):
+    """
+    PRD Section 1.1 & 5.2 Exception Pathway:
+    Concessionaire tipper drives past coordinate at 38 km/h without stopping (dwell time: 8s).
+    System detects ghost billing attempt -> Status: FLAGGED_INCOMPLETE + ₹5,000 fine levied.
+    """
+    before_url, _ = StorageService.generate_closed_loop_proof_images(
+        tipper_id="AP-31-TY-9912",
+        landmark="Sector 4 Commercial Corridor"
+    )
+
+    ghost_ticket = Incident(
+        defect_type=DefectType.GARBAGE_OVERFLOW.value,
+        title="Unverified Drive-by / Route Fraud Alert",
+        status=IncidentStatus.NEEDS_ACTION.value,
+        urgency=UrgencyLevel.SANITATION_ROADS.value,
+        confidence=0.91,
+        slm_summary="Route fraud detected: Tipper AP-31-TY-9912 passed designated coordinates at 38 km/h without dwelling (dwell duration: 8 seconds). Trash still present.",
+        landmark="Sector 4 Commercial Corridor",
+        latitude=17.7245,
+        longitude=83.3080,
+        ward_id="GVMC-W14",
+        zone_id="ZONE-03",
+        ward_name="Ward 14 (Siripuram)",
+        assigned_department="Public Health & Sanitation",
+        channel_sla="Contractor SLA Penalty Bot (Instant)",
+        concessionaire_id="CONC-APEX",
+        concessionaire_name="Apex CleanTech",
+        work_state="FLAGGED_INCOMPLETE",
+        cleaning_tipper_id="AP-31-TY-9912",
+        dwell_duration_sec=8,
+        before_image_url=before_url,
+        billing_credit_approved=False,
+        penalty_amount_inr=5000.0,
+        first_sighting_at=datetime.utcnow(),
+        last_sighting_at=datetime.utcnow(),
+        sighting_count=1,
+        spotted_by_label="Tipper #09 (Speed: 38 km/h)"
+    )
+    db.add(ghost_ticket)
+    db.commit()
+
+    return {
+        "status": "warning",
+        "state": "FLAGGED_INCOMPLETE",
+        "ticket_id": ghost_ticket.id,
+        "landmark": ghost_ticket.landmark,
+        "penalty_amount": "₹5,000",
+        "reason": "Vehicle passed at 38 km/h (dwell: 8s < 60s minimum threshold). Trash detected on curb.",
+        "message": "GHOST-BILLING CAUGHT! Contractor billed ₹5,000 penalty. Trip uncredited."
+    }
+
+

@@ -1,4 +1,4 @@
-import { Incident, Ward, FleetVehicle, AnalyticsStats, IncidentStatus } from '../types';
+import { Incident, Ward, FleetVehicle, AnalyticsStats, IncidentStatus, ContractorHubData } from '../types';
 
 const API_BASE = '/api/v1';
 
@@ -92,6 +92,41 @@ export const api = {
   async clearData(): Promise<any> {
     const res = await fetch(`${API_BASE}/simulation/clear`, { method: 'POST' });
     if (!res.ok) throw new Error('Failed to clear database');
+    return res.json();
+  },
+
+  // PRD v4.0 Closed-Loop & Contractor Hub APIs
+  async getContractorHub(concessionaireName = 'Apex CleanTech'): Promise<ContractorHubData> {
+    const res = await fetch(`${API_BASE}/closed-loop/contractor-hub?concessionaire_name=${encodeURIComponent(concessionaireName)}`);
+    if (!res.ok) throw new Error('Failed to fetch contractor hub');
+    return res.json();
+  },
+
+  async appealRedump(incidentId: string, defenseNotes: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/closed-loop/appeal-redump`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ incident_id: incidentId, defense_notes: defenseNotes })
+    });
+    if (!res.ok) throw new Error('Failed to submit re-dump defense');
+    return res.json();
+  },
+
+  async simulateTipperArrival(): Promise<any> {
+    const res = await fetch(`${API_BASE}/simulation/closed-loop/simulate-arrival`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to simulate tipper arrival');
+    return res.json();
+  },
+
+  async simulateTipperClosure(): Promise<any> {
+    const res = await fetch(`${API_BASE}/simulation/closed-loop/simulate-closure`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to simulate tipper closure');
+    return res.json();
+  },
+
+  async simulateGhostBilling(): Promise<any> {
+    const res = await fetch(`${API_BASE}/simulation/closed-loop/simulate-ghost-billing`, { method: 'POST' });
+    if (!res.ok) throw new Error('Failed to simulate ghost billing');
     return res.json();
   }
 };

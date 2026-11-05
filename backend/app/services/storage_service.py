@@ -134,3 +134,60 @@ class StorageService:
         draw.text((15, 15), hud_text, fill=(255, 255, 255))
         return img
 
+    @staticmethod
+    def generate_closed_loop_proof_images(
+        tipper_id: str = "AP-31-TT-4402",
+        landmark: str = "Main Market Road, Pillar 42"
+    ) -> Tuple[str, str]:
+        """
+        PRD Section 5.2 & 6.2: Generates synthetic dual-camera Before & After proof images.
+        Before: Front dashcam view showing roadside trash on curb (1:41 PM).
+        After: Rear IP67 aux cam view showing clean, spotless asphalt & curb after 15m pull-forward (1:44 PM).
+        """
+        unique_id = str(uuid.uuid4())[:8]
+        settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+        w, h = 640, 480
+
+        # 1. BEFORE IMAGE (Front Camera - Trash Detected)
+        before_img = Image.new("RGB", (w, h), color=(140, 190, 220))
+        draw_b = ImageDraw.Draw(before_img)
+        # Road asphalt
+        draw_b.polygon([(0, int(h * 0.45)), (w, int(h * 0.45)), (w, h), (0, h)], fill=(45, 48, 52))
+        # Sidewalk / Curb
+        draw_b.polygon([(0, int(h * 0.45)), (int(w * 0.22), h), (0, h)], fill=(130, 125, 120))
+        # Garbage pile
+        draw_b.ellipse([int(w * 0.12), int(h * 0.52), int(w * 0.42), int(h * 0.82)], fill=(65, 88, 55))
+        draw_b.ellipse([int(w * 0.18), int(h * 0.58), int(w * 0.38), int(h * 0.86)], fill=(120, 135, 95))
+        draw_b.rectangle([int(w * 0.24), int(h * 0.62), int(w * 0.32), int(h * 0.74)], fill=(180, 170, 140))
+        # Red Bounding Box
+        bx1, by1, bx2, by2 = int(w * 0.10), int(h * 0.50), int(w * 0.44), int(h * 0.88)
+        draw_b.rectangle([bx1, by1, bx2, by2], outline=(239, 68, 68), width=3)
+        draw_b.rectangle([bx1, by1 - 22, bx1 + 190, by1], fill=(239, 68, 68))
+        draw_b.text((bx1 + 6, by1 - 18), "TRASH DETECTED 89%", fill=(255, 255, 255))
+        # HUD Overlay
+        draw_b.rectangle([(0, 0), (w, 32)], fill=(15, 20, 30))
+        draw_b.text((12, 8), f"FRONT CAM (BEFORE PROOF) • {tipper_id} • 1:41 PM • {landmark[:28]}", fill=(255, 255, 255))
+        before_file = f"proof_before_{unique_id}.webp"
+        before_img.save(settings.UPLOAD_DIR / before_file, format="WEBP", quality=75)
+
+        # 2. AFTER IMAGE (Rear Aux Camera - Curb Spotless)
+        after_img = Image.new("RGB", (w, h), color=(140, 190, 220))
+        draw_a = ImageDraw.Draw(after_img)
+        # Road asphalt (looking rearwards)
+        draw_a.polygon([(0, int(h * 0.45)), (w, int(h * 0.45)), (w, h), (0, h)], fill=(48, 50, 54))
+        # Spotless sidewalk / curb line
+        draw_a.polygon([(0, int(h * 0.45)), (int(w * 0.22), h), (0, h)], fill=(150, 148, 142))
+        draw_a.line([(int(w * 0.05), int(h * 0.45)), (int(w * 0.25), h)], fill=(220, 220, 220), width=4)
+        # Green Verified Box
+        draw_a.rectangle([int(w * 0.08), int(h * 0.50), int(w * 0.45), int(h * 0.85)], outline=(34, 197, 94), width=3)
+        draw_a.rectangle([int(w * 0.08), int(h * 0.50) - 22, int(w * 0.08) + 195, int(h * 0.50)], fill=(34, 197, 94))
+        draw_a.text((int(w * 0.08) + 6, int(h * 0.50) - 18), "CURB SPOTLESS (CONF 94%)", fill=(255, 255, 255))
+        # HUD Overlay
+        draw_a.rectangle([(0, 0), (w, 32)], fill=(15, 20, 30))
+        draw_a.text((12, 8), f"REAR CAM IP67 (AFTER PROOF) • {tipper_id} • 1:44 PM • +15m PULL-FORWARD", fill=(34, 197, 94))
+        after_file = f"proof_after_{unique_id}.webp"
+        after_img.save(settings.UPLOAD_DIR / after_file, format="WEBP", quality=75)
+
+        return f"/uploads/{before_file}", f"/uploads/{after_file}"
+
+

@@ -5,6 +5,7 @@ from app.api.v1.wards import router as wards_router
 from app.api.v1.fleet import router as fleet_router
 from app.api.v1.analytics import router as analytics_router
 from app.api.v1.simulation import router as simulation_router
+from app.api.v1.closed_loop import router as closed_loop_router
 
 api_router = APIRouter()
 
@@ -14,4 +15,5 @@ api_router.include_router(wards_router, prefix="/wards", tags=["Municipal GIS Wa
 api_router.include_router(fleet_router, prefix="/fleet", tags=["Fleet & Hardware Tracking"])
 api_router.include_router(analytics_router, prefix="/analytics", tags=["Performance & CapEx Analytics"])
 api_router.include_router(simulation_router, prefix="/simulation", tags=["Edge Patrol Simulator"])
+api_router.include_router(closed_loop_router, prefix="/closed-loop", tags=["Contractor Governance & Proof-of-Work"])
 

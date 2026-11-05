@@ -102,8 +102,13 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
 
       {/* Bottom row: Status & Quick Action Button */}
       <div className="flex items-center justify-between pt-2 border-t border-slate-800/80">
-        <div>
+        <div className="flex items-center gap-1.5">
           {getStatusBadge()}
+          {incident.concessionaire_name && incident.status !== 'RESOLVED' && (
+            <span className="text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-800 text-amber-300/90 border border-slate-700 truncate max-w-[110px]" title={`Assigned Concessionaire: ${incident.concessionaire_name}`}>
+              {incident.concessionaire_name}
+            </span>
+          )}
         </div>
 
         {incident.status !== 'RESOLVED' && (
@@ -112,7 +117,7 @@ export const IncidentCard: React.FC<IncidentCardProps> = ({
             className="flex items-center space-x-1 px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600 text-blue-400 hover:text-white border border-blue-500/30 text-xs font-medium transition-colors"
           >
             <Send className="w-3 h-3" />
-            <span>Send to Inspector</span>
+            <span>Notify Contractor</span>
           </button>
         )}
       </div>

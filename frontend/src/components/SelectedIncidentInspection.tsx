@@ -82,31 +82,56 @@ export const SelectedIncidentInspection: React.FC<SelectedIncidentInspectionProp
     <div className="bg-slate-900/95 border-t border-slate-800 p-4 max-h-[45vh] overflow-y-auto">
       <div className="flex flex-col lg:flex-row gap-5">
         {/* Left column: Photo Evidence with AI Bounding Box */}
-        <div className="w-full lg:w-72 flex-shrink-0">
+        <div className="w-full lg:w-80 flex-shrink-0">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center justify-between">
             <span className="flex items-center space-x-1.5">
               <Eye className="w-3.5 h-3.5 text-blue-400" />
-              <span>Photo Evidence (AI Bounding Box)</span>
+              <span>{incident.after_image_url ? 'Dual-Camera Closed-Loop Proof' : 'Photo Evidence (AI BBox)'}</span>
             </span>
             <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950/80 px-1.5 py-0.5 rounded border border-emerald-800/60">
               {Math.round(incident.confidence * 100)}% Conf
             </span>
           </div>
 
-          <div className="relative rounded-lg overflow-hidden border border-slate-700 bg-slate-950 aspect-video flex items-center justify-center shadow-inner group">
-            {incident.image_url ? (
-              <img
-                src={incident.image_url}
-                alt="AI Evidence"
-                className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
-              />
-            ) : (
-              <div className="text-xs text-slate-500">Dashcam image processing...</div>
-            )}
-            <div className="absolute bottom-1.5 left-1.5 bg-black/75 backdrop-blur-sm text-[10px] text-slate-200 px-2 py-0.5 rounded border border-white/10 font-mono">
-              WebP 42 KB • 1080p
+          {incident.after_image_url ? (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="relative rounded-lg overflow-hidden border border-slate-700 bg-slate-950 aspect-video">
+                <img
+                  src={incident.before_image_url || incident.image_url}
+                  alt="Before Proof"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-1 left-1 bg-black/80 px-1.5 py-0.5 rounded text-[9px] font-bold text-red-400">
+                  FRONT: BEFORE
+                </div>
+              </div>
+              <div className="relative rounded-lg overflow-hidden border border-emerald-800 bg-slate-950 aspect-video">
+                <img
+                  src={incident.after_image_url}
+                  alt="After Proof"
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute top-1 left-1 bg-black/80 px-1.5 py-0.5 rounded text-[9px] font-bold text-emerald-400">
+                  REAR: AFTER
+                </div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="relative rounded-lg overflow-hidden border border-slate-700 bg-slate-950 aspect-video flex items-center justify-center shadow-inner group">
+              {incident.image_url ? (
+                <img
+                  src={incident.image_url}
+                  alt="AI Evidence"
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105 duration-300"
+                />
+              ) : (
+                <div className="text-xs text-slate-500">Dashcam image processing...</div>
+              )}
+              <div className="absolute bottom-1.5 left-1.5 bg-black/75 backdrop-blur-sm text-[10px] text-slate-200 px-2 py-0.5 rounded border border-white/10 font-mono">
+                WebP 42 KB • 1080p
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Center column: Verification Details & Plain-English SLM Context */}
@@ -119,6 +144,16 @@ export const SelectedIncidentInspection: React.FC<SelectedIncidentInspectionProp
               <span className="text-xs font-mono px-2 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700">
                 Ticket: {incident.id.slice(0, 8)}
               </span>
+              {incident.concessionaire_name && (
+                <span className="text-xs px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-semibold">
+                  Concessionaire: {incident.concessionaire_name}
+                </span>
+              )}
+              {incident.billing_credit_approved && (
+                <span className="text-xs px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold">
+                  ✓ 100% Billing Credit Approved
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-400 flex items-center space-x-1 mt-0.5">
               <MapPin className="w-3.5 h-3.5 text-blue-400 flex-shrink-0" />

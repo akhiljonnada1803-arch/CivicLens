@@ -52,6 +52,21 @@ class Incident(Base):
     assigned_department = Column(String(100), nullable=False)
     channel_sla = Column(String(100), nullable=False)
     
+    # PRD v4.0: Contractor Governance & Closed-Loop Dual-Camera Verification
+    concessionaire_id = Column(String(50), nullable=True, default="CONC-APEX")
+    concessionaire_name = Column(String(100), nullable=True, default="Apex CleanTech")
+    work_state = Column(String(50), nullable=False, default="OPEN") # OPEN, WORK_IN_PROGRESS, CLOSED_VERIFIED, FLAGGED_INCOMPLETE, DISPUTED_REDUMP
+    before_image_url = Column(String(500), nullable=True) # Front camera of Tipper upon arrival
+    after_image_url = Column(String(500), nullable=True)  # Rear camera of Tipper after 15m pull-forward
+    arrived_at = Column(DateTime, nullable=True)
+    cleared_at = Column(DateTime, nullable=True)
+    dwell_duration_sec = Column(Integer, nullable=True)
+    cleaning_tipper_id = Column(String(100), nullable=True)
+    billing_credit_approved = Column(Boolean, default=False)
+    penalty_amount_inr = Column(Float, default=0.0)
+    is_redump_dispute = Column(Boolean, default=False)
+    redump_notes = Column(Text, nullable=True)
+    
     # Sighting details
     first_sighting_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     last_sighting_at = Column(DateTime, default=datetime.utcnow, nullable=False)

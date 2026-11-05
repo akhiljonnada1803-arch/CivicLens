@@ -7,6 +7,7 @@ import { SelectedIncidentInspection } from './components/SelectedIncidentInspect
 import { SimulationDrawer } from './components/SimulationDrawer';
 import { AnalyticsModal } from './components/AnalyticsModal';
 import { MobileConnectModal } from './components/MobileConnectModal';
+import { ContractorHub } from './components/ContractorHub';
 import { api } from './services/api';
 import { Incident, FleetVehicle, Ward, AnalyticsStats, IncidentStatus } from './types';
 
@@ -18,6 +19,7 @@ export const App: React.FC = () => {
 
   const [selectedIncident, setSelectedIncident] = useState<Incident | null>(null);
   const [selectedZone, setSelectedZone] = useState<string>('ZONE-03');
+  const [activePortal, setActivePortal] = useState<'MUNICIPAL' | 'CONTRACTOR'>('MUNICIPAL');
   const [activeStatFilter, setActiveStatFilter] = useState<string>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -128,6 +130,8 @@ export const App: React.FC = () => {
       <Header
         selectedZone={selectedZone}
         onZoneChange={setSelectedZone}
+        activePortal={activePortal}
+        onPortalChange={setActivePortal}
         onOpenSimulation={() => setIsSimulationOpen(true)}
         onOpenAnalytics={() => setIsAnalyticsOpen(true)}
         onOpenMobileConnect={() => setIsMobileConnectOpen(true)}
@@ -135,57 +139,64 @@ export const App: React.FC = () => {
         isRefreshing={isRefreshing}
       />
 
-      {/* Live Toast Notification Banner */}
-      {toastMessage && (
-        <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-white text-xs font-bold flex items-center justify-between shadow-lg animate-in slide-in-from-top duration-200">
-          <div className="flex items-center space-x-2">
-            <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
-            <span>{toastMessage}</span>
+      {/* Portal 2: Contractor Operations & Proof-of-Work Vault (PRD Section 6.2) */}
+      {activePortal === 'CONTRACTOR' ? (
+        <ContractorHub onBackToConsole={() => setActivePortal('MUNICIPAL')} />
+      ) : (
+        <>
+          {/* Live Toast Notification Banner */}
+          {toastMessage && (
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-white text-xs font-bold flex items-center justify-between shadow-lg animate-in slide-in-from-top duration-200">
+              <div className="flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-white animate-ping"></span>
+                <span>{toastMessage}</span>
+              </div>
+              <button onClick={() => setToastMessage(null)} className="text-white/80 hover:text-white">✕</button>
+            </div>
+          )}
+
+          {/* Top Stat Bar ([🚨 2 Urgent Safety] [⚠️ 9 Sanitation/Roads] [✅ 28 Resolved]) */}
+          <StatBar
+            stats={stats}
+            activeFilter={activeStatFilter}
+            onFilterChange={setActiveStatFilter}
+          />
+
+          {/* Main Two-Pane Operations Layout */}
+          <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
+            {/* Left Pane: Incident Feed (Simple Cards) */}
+            <IncidentFeed
+              incidents={filteredIncidents}
+              selectedIncident={selectedIncident}
+              onSelectIncident={setSelectedIncident}
+              onQuickDispatch={handleQuickDispatch}
+              searchQuery={searchQuery}
+              onSearchChange={setSearchQuery}
+              statusFilter={statusFilter}
+              onStatusFilterChange={setStatusFilter}
+            />
+
+            {/* Right Pane: Live Ward Map & Inspection */}
+            <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+              {/* Live GIS Map */}
+              <MapView
+                incidents={incidents}
+                fleet={fleet}
+                ward={currentWard}
+                selectedIncident={selectedIncident}
+                onSelectIncident={setSelectedIncident}
+              />
+
+              {/* Selected Incident Inspection Card */}
+              <SelectedIncidentInspection
+                incident={selectedIncident}
+                onDispatch={handleDispatch}
+                onUpdateStatus={handleUpdateStatus}
+              />
+            </div>
           </div>
-          <button onClick={() => setToastMessage(null)} className="text-white/80 hover:text-white">✕</button>
-        </div>
+        </>
       )}
-
-      {/* Top Stat Bar ([🚨 2 Urgent Safety] [⚠️ 9 Sanitation/Roads] [✅ 28 Resolved]) */}
-      <StatBar
-        stats={stats}
-        activeFilter={activeStatFilter}
-        onFilterChange={setActiveStatFilter}
-      />
-
-      {/* Main Two-Pane Operations Layout */}
-      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
-        {/* Left Pane: Incident Feed (Simple Cards) */}
-        <IncidentFeed
-          incidents={filteredIncidents}
-          selectedIncident={selectedIncident}
-          onSelectIncident={setSelectedIncident}
-          onQuickDispatch={handleQuickDispatch}
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-        />
-
-        {/* Right Pane: Live Ward Map & Inspection */}
-        <div className="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
-          {/* Live GIS Map */}
-          <MapView
-            incidents={incidents}
-            fleet={fleet}
-            ward={currentWard}
-            selectedIncident={selectedIncident}
-            onSelectIncident={setSelectedIncident}
-          />
-
-          {/* Selected Incident Inspection Card */}
-          <SelectedIncidentInspection
-            incident={selectedIncident}
-            onDispatch={handleDispatch}
-            onUpdateStatus={handleUpdateStatus}
-          />
-        </div>
-      </div>
 
       {/* Simulation Drawer */}
       <SimulationDrawer

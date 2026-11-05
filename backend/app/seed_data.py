@@ -4,18 +4,36 @@ from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 from app.models.ward import Ward, FleetVehicle
 from app.models.incident import Incident, IncidentSighting, DefectType, IncidentStatus, UrgencyLevel
+from app.models.concessionaire import Concessionaire
 from app.services.storage_service import StorageService
 
 def seed_initial_data(db: Session):
     """
-    Seeds GVMC Ward 14, Zone 3, Fleet Vehicles, and baseline incidents
-    matching the PRD Section 6 ASCII Operational Console wireframe.
+    Seeds GVMC Ward 14, Zone 3, Fleet Vehicles, Concessionaires, and baseline incidents
+    matching the PRD Version 4.0 Dual-Portal and Closed-Loop specifications.
     """
     # 1. Clear existing data
     db.query(IncidentSighting).delete()
     db.query(Incident).delete()
     db.query(FleetVehicle).delete()
     db.query(Ward).delete()
+    db.query(Concessionaire).delete()
+    db.commit()
+
+    # 1.1 Seed Concessionaire (PRD Section 6.2)
+    apex = Concessionaire(
+        id="CONC-APEX",
+        name="Apex CleanTech",
+        contracted_zone="Zone 3 (Central)",
+        assigned_wards="GVMC-W14, GVMC-W15",
+        active_tippers=18,
+        clean_rate_pct=98.2,
+        penalty_balance_inr=0.0,
+        total_credits_inr=245000.0,
+        contact_person="M. Raghunath (Fleet Ops)",
+        contact_phone="+91 94401 88204"
+    )
+    db.add(apex)
     db.commit()
 
     # 2. Seed Wards (GVMC Visakhapatnam)
@@ -74,13 +92,17 @@ def seed_initial_data(db: Session):
     db.add_all([w14, w15])
     db.commit()
 
-    # 3. Seed Fleet Vehicles
+    # 3. Seed Fleet Vehicles (PRD Section 1.2: Fleet A 'The Eyes' vs Fleet B 'The Hands')
     v1 = FleetVehicle(
         id="DEV-001",
         label="Sweeper #04",
         vehicle_type="SWEEPER",
         registration_no="AP 31 TX 4012",
         ward_id="GVMC-W14",
+        fleet_type="FLEET_A_SCANNER",
+        has_rear_camera=False,
+        assigned_route_id="Route #14A - Siripuram",
+        concessionaire_name="Apex CleanTech",
         current_lat=17.7225,
         current_lon=83.3045,
         speed_kmh=18.2,
@@ -92,10 +114,14 @@ def seed_initial_data(db: Session):
 
     v2 = FleetVehicle(
         id="DEV-002",
-        label="Transit Bus #12",
+        label="Transit Bus #12 (APSRTC)",
         vehicle_type="TRANSIT_BUS",
         registration_no="AP 31 Z 9821",
         ward_id="GVMC-W14",
+        fleet_type="FLEET_A_SCANNER",
+        has_rear_camera=False,
+        assigned_route_id="APSRTC Route 10K - Siripuram / RTC Complex",
+        concessionaire_name="APSRTC Urban Division",
         current_lat=17.7240,
         current_lon=83.3055,
         speed_kmh=27.5,
@@ -107,10 +133,14 @@ def seed_initial_data(db: Session):
 
     v3 = FleetVehicle(
         id="DEV-003",
-        label="Waste Tipper #02",
+        label="Tipper #04 (Fleet B)",
         vehicle_type="TIPPER",
-        registration_no="AP 31 TY 1104",
+        registration_no="AP 31 TT 4402",
         ward_id="GVMC-W14",
+        fleet_type="FLEET_B_CLEANER",
+        has_rear_camera=True,
+        assigned_route_id="Route #14B - Maddilapalem QRT",
+        concessionaire_name="Apex CleanTech",
         current_lat=17.7212,
         current_lon=83.3078,
         speed_kmh=21.0,
@@ -122,10 +152,14 @@ def seed_initial_data(db: Session):
 
     v4 = FleetVehicle(
         id="DEV-004",
-        label="Enforcement Squad #01",
+        label="PCR Van #04",
         vehicle_type="ENFORCEMENT",
-        registration_no="AP 31 P 0001",
+        registration_no="AP 31 P 0004",
         ward_id="GVMC-W14",
+        fleet_type="FLEET_A_SCANNER",
+        has_rear_camera=False,
+        assigned_route_id="Sector 3 Police Patrol",
+        concessionaire_name="Visakhapatnam City Police",
         current_lat=17.7250,
         current_lon=83.3030,
         speed_kmh=31.0,
@@ -148,6 +182,11 @@ def seed_initial_data(db: Session):
     img_crash_annot, img_crash_orig, bbox_crash = StorageService.save_and_annotate_image(
         None, "vehicle_crash", 0.92
     )
+    # Generate Before and After Proof for Closed Loop Showcase
+    before_proof_url, after_proof_url = StorageService.generate_closed_loop_proof_images(
+        tipper_id="AP-31-TT-4402",
+        landmark="Main Market Road, Pillar 42"
+    )
 
     now = datetime.utcnow()
 
@@ -167,11 +206,14 @@ def seed_initial_data(db: Session):
         ward_name="Ward 14 (Siripuram)",
         assigned_department="Public Health & Sanitation",
         channel_sla="Ward Sanitary Inspector Telegram Bot (< 2 hours)",
+        concessionaire_id="CONC-APEX",
+        concessionaire_name="Apex CleanTech",
+        work_state="OPEN",
         first_sighting_at=now - timedelta(hours=3, minutes=45),
         last_sighting_at=now - timedelta(minutes=8),
         sighting_count=2,
-        spotted_by_label="Sweeper #04",
-        last_device_id="DEV-001",
+        spotted_by_label="Bus #12 (Fleet A)",
+        last_device_id="DEV-002",
         image_url=img_garbage_annot,
         original_image_url=img_garbage_orig,
         bbox_json=bbox_garbage,
@@ -235,7 +277,46 @@ def seed_initial_data(db: Session):
         telegram_dispatched_at=now - timedelta(minutes=20)
     )
 
-    db.add_all([inc_garbage, inc_manhole, inc_collision])
+    # Closed-Loop Showcase Verified Job (PRD Section 6.2: Job #8841)
+    inc_closed_loop = Incident(
+        id="job-8841",
+        defect_type=DefectType.GARBAGE_OVERFLOW.value,
+        title="Garbage Overflow (Dual-Vision Verified)",
+        status=IncidentStatus.RESOLVED.value,
+        urgency=UrgencyLevel.SANITATION_ROADS.value,
+        confidence=0.94,
+        slm_summary="Autonomous dual-vision closed loop: Front camera detected trash; rear IP67 verified clean curb post 15m pull-forward.",
+        landmark="Main Market Road, Pillar 42",
+        latitude=17.7225,
+        longitude=83.3045,
+        ward_id="GVMC-W14",
+        zone_id="ZONE-03",
+        ward_name="Ward 14 (Siripuram)",
+        assigned_department="Public Health & Sanitation",
+        channel_sla="Ward Sanitary Inspector Telegram Bot (< 2 hours)",
+        concessionaire_id="CONC-APEX",
+        concessionaire_name="Apex CleanTech",
+        work_state="CLOSED_VERIFIED",
+        cleaning_tipper_id="AP-31-TT-4402",
+        dwell_duration_sec=180,
+        arrived_at=now - timedelta(minutes=6),
+        cleared_at=now - timedelta(minutes=3),
+        before_image_url=before_proof_url,
+        after_image_url=after_proof_url,
+        billing_credit_approved=True,
+        penalty_amount_inr=0.0,
+        first_sighting_at=now - timedelta(hours=1, minutes=15),
+        last_sighting_at=now - timedelta(minutes=3),
+        sighting_count=2,
+        spotted_by_label="Bus #12 (Fleet A)",
+        last_device_id="DEV-002",
+        image_url=img_garbage_annot,
+        original_image_url=img_garbage_orig,
+        bbox_json=bbox_garbage,
+        telegram_dispatched=True
+    )
+
+    db.add_all([inc_garbage, inc_manhole, inc_collision, inc_closed_loop])
     db.commit()
 
     # Add sightings for the 3 main items

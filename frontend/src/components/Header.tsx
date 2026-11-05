@@ -4,6 +4,8 @@ import { ShieldAlert, Radio, DollarSign, PlayCircle, MapPin, UserCheck, RefreshC
 interface HeaderProps {
   selectedZone: string;
   onZoneChange: (zone: string) => void;
+  activePortal: 'MUNICIPAL' | 'CONTRACTOR';
+  onPortalChange: (portal: 'MUNICIPAL' | 'CONTRACTOR') => void;
   onOpenSimulation: () => void;
   onOpenAnalytics: () => void;
   onOpenMobileConnect: () => void;
@@ -14,6 +16,8 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({
   selectedZone,
   onZoneChange,
+  activePortal,
+  onPortalChange,
   onOpenSimulation,
   onOpenAnalytics,
   onOpenMobileConnect,
@@ -44,8 +48,34 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
       </div>
 
-      {/* Center Zone & Officer Selectors */}
+      {/* Center Zone & Portal Switcher */}
       <div className="flex items-center space-x-3 text-xs">
+        {/* PRD v4.0 RBAC Portal Switcher */}
+        <div className="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800">
+          <button
+            onClick={() => onPortalChange('MUNICIPAL')}
+            className={`px-3 py-1 rounded-md font-medium transition-all flex items-center space-x-1.5 ${
+              activePortal === 'MUNICIPAL'
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <span>🏛️</span>
+            <span>Municipal Admin</span>
+          </button>
+          <button
+            onClick={() => onPortalChange('CONTRACTOR')}
+            className={`px-3 py-1 rounded-md font-medium transition-all flex items-center space-x-1.5 ${
+              activePortal === 'CONTRACTOR'
+                ? 'bg-amber-600 text-slate-950 font-bold shadow-sm'
+                : 'text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <span>🚚</span>
+            <span>Contractor Hub</span>
+          </button>
+        </div>
+
         <div className="flex items-center space-x-1.5 bg-slate-950 px-3 py-1.5 rounded-md border border-slate-800">
           <span className="text-slate-400 font-medium">Zone:</span>
           <select 
@@ -59,9 +89,9 @@ export const Header: React.FC<HeaderProps> = ({
           </select>
         </div>
 
-        <div className="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-md border border-slate-800">
+        <div className="hidden xl:flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-md border border-slate-800">
           <UserCheck className="w-3.5 h-3.5 text-blue-400" />
-          <span className="text-slate-300 font-medium">K. V. Ramana (Sanitary Inspector)</span>
+          <span className="text-slate-300 font-medium">K. V. Ramana (Inspector)</span>
         </div>
       </div>
 
