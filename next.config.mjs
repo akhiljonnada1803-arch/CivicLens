@@ -14,17 +14,17 @@ const nextConfig = {
     ],
   },
   rewrites: async () => {
-    return [
-      {
-        source: '/api/:path*',
-        destination:
-          process.env.NODE_ENV === 'development'
-            ? 'http://127.0.0.1:8000/api/:path*'
-            : '/api/:path*',
-      },
-    ];
+    // In local development with separate Python process, proxy to localhost:8000
+    if (process.env.NODE_ENV === 'development' && process.env.LOCAL_PYTHON_DEV) {
+      return [
+        {
+          source: '/api/:path*',
+          destination: 'http://127.0.0.1:8000/api/:path*',
+        },
+      ];
+    }
+    return [];
   },
 };
 
 export default nextConfig;
-

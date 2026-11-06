@@ -30,6 +30,13 @@ export const MunicipalDesk: React.FC<MunicipalDeskProps> = ({ incidents, onRefre
   const [severityFilter, setSeverityFilter] = useState<string>("ALL");
   const [dispatchedMap, setDispatchedMap] = useState<Record<string, boolean>>({});
 
+  // Sync selectedIncident when incidents prop updates
+  React.useEffect(() => {
+    if (!selectedIncident && incidents.length > 0) {
+      setSelectedIncident(incidents[0]);
+    }
+  }, [incidents, selectedIncident]);
+
   const filtered = incidents.filter((inc) => {
     if (severityFilter === "ALL") return true;
     return inc.severity === severityFilter;
