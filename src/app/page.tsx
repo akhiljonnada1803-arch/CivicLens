@@ -146,96 +146,96 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     loadData();
-    const interval = setInterval(loadData, 8000);
+    const interval = setInterval(loadData, 12000);
     return () => clearInterval(interval);
   }, []);
 
   // Prevent hydration mismatch
   if (!mounted) {
     return (
-      <div className="h-screen w-screen bg-[#080c14] flex items-center justify-center text-slate-400">
-        <div className="flex items-center space-x-3">
-          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-          <span className="text-sm font-mono">Initializing CivicLens AI Serverless Engine...</span>
+      <div className="h-screen w-screen bg-eco-surface flex items-center justify-center text-eco-on-surface font-body">
+        <div className="flex items-center space-x-3 bg-eco-surface-container-lowest p-5 rounded-xl border border-eco-outline-variant shadow-tonal">
+          <div className="w-5 h-5 border-2 border-eco-primary border-t-transparent rounded-full animate-spin" />
+          <span className="text-sm font-label font-medium text-eco-on-surface">Initializing CivicLens AI Tonal Spot Eco Engine...</span>
         </div>
       </div>
     );
   }
 
   return (
-    <main className="h-screen w-screen flex flex-col bg-[#080c14] overflow-hidden text-slate-100">
+    <main className="h-screen w-screen flex flex-col bg-eco-surface overflow-hidden text-eco-on-surface font-body">
       {/* Top Navigation & Executive Header */}
-      <header className="bg-[#0b0f19] border-b border-slate-800 px-6 py-3 flex flex-wrap items-center justify-between gap-4 select-none flex-shrink-0">
+      <header className="bg-eco-surface-container-lowest border-b border-eco-outline-variant/70 px-6 py-3 flex flex-wrap items-center justify-between gap-4 select-none flex-shrink-0 shadow-subtle">
         {/* Brand Identity */}
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/40 flex items-center justify-center text-blue-400 shadow-lg shadow-blue-900/30">
+          <div className="w-10 h-10 rounded-xl bg-eco-primary-container text-eco-on-primary-container flex items-center justify-center shadow-subtle">
             <ShieldAlert className="w-5 h-5" />
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h1 className="font-black text-white text-base tracking-tight">
+              <h1 className="font-headline font-bold text-eco-on-surface text-lg tracking-tight">
                 CivicLens AI
               </h1>
-              <span className="text-slate-600">•</span>
-              <span className="text-blue-400 font-semibold text-xs uppercase tracking-wider">
+              <span className="text-eco-outline-variant">•</span>
+              <span className="text-eco-primary font-label font-bold text-xs uppercase tracking-wider">
                 Autonomous Civic Audit
               </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-950 text-emerald-400 border border-emerald-800/60">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse" />
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-eco-primary-fixed text-eco-on-primary-fixed-variant border border-eco-primary/30 font-label">
+                <span className="w-1.5 h-1.5 rounded-full bg-eco-primary mr-1.5 animate-pulse" />
                 Vercel Serverless
               </span>
             </div>
-            <p className="text-[11px] text-slate-400 flex items-center space-x-1 mt-0.5 font-mono">
-              <MapPin className="w-3 h-3 text-slate-500" />
+            <p className="text-xs text-eco-on-surface-variant flex items-center space-x-1 mt-0.5 font-label">
+              <MapPin className="w-3.5 h-3.5 text-eco-primary" />
               <span>GVMC Visakhapatnam • Ward 14 (Siripuram / Maddilapalem)</span>
             </p>
           </div>
         </div>
 
         {/* Center Executive Tab Switcher */}
-        <div className="flex items-center bg-[#070a12] p-1 rounded-xl border border-slate-800 shadow-inner">
+        <div className="flex items-center bg-eco-surface-container p-1 rounded-lg border border-eco-outline-variant/60 shadow-inner">
           <button
             onClick={() => setActiveTab("MUNICIPAL")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-2 ${
+            className={`px-4 py-2 rounded-md text-xs font-label font-bold transition-all flex items-center space-x-2 ${
               activeTab === "MUNICIPAL"
-                ? "bg-blue-600 text-white shadow-md shadow-blue-600/20"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-eco-primary text-eco-on-primary shadow-sm"
+                : "text-eco-on-surface-variant hover:text-eco-on-surface hover:bg-eco-surface-container-high"
             }`}
           >
-            <Building2 className="w-3.5 h-3.5" />
+            <Building2 className="w-4 h-4" />
             <span>Municipal Command Desk</span>
           </button>
           <button
             onClick={() => setActiveTab("CONTRACTOR")}
-            className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center space-x-2 ${
+            className={`px-4 py-2 rounded-md text-xs font-label font-bold transition-all flex items-center space-x-2 ${
               activeTab === "CONTRACTOR"
-                ? "bg-amber-600 text-slate-950 shadow-md shadow-amber-600/20"
-                : "text-slate-400 hover:text-slate-200"
+                ? "bg-eco-tertiary text-eco-on-tertiary shadow-sm"
+                : "text-eco-on-surface-variant hover:text-eco-on-surface hover:bg-eco-surface-container-high"
             }`}
           >
-            <Truck className="w-3.5 h-3.5" />
+            <Truck className="w-4 h-4" />
             <span>Contractor SLA & Proof Vault</span>
           </button>
         </div>
 
         {/* Right Actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 font-label">
           <button
             onClick={loadData}
             disabled={isRefreshing}
-            className="p-2 text-slate-400 hover:text-white bg-slate-900 hover:bg-slate-800 rounded-lg border border-slate-800 transition-colors"
+            className="p-2 text-eco-on-surface-variant hover:text-eco-on-surface bg-eco-surface-container hover:bg-eco-surface-container-high rounded-lg border border-eco-outline-variant transition-colors"
             title="Refresh Live Data"
           >
-            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-blue-400" : ""}`} />
+            <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-eco-primary" : ""}`} />
           </button>
           <a
             href="/api/health"
             target="_blank"
             rel="noreferrer"
-            className="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs text-slate-300 font-mono flex items-center space-x-1"
+            className="px-3.5 py-1.5 rounded-lg bg-eco-surface-container hover:bg-eco-surface-container-high border border-eco-outline-variant text-xs text-eco-on-surface font-semibold flex items-center space-x-1.5 shadow-subtle"
           >
             <span>API Health Check</span>
-            <ExternalLink className="w-3 h-3 text-slate-500" />
+            <ExternalLink className="w-3.5 h-3.5 text-eco-outline" />
           </a>
         </div>
       </header>

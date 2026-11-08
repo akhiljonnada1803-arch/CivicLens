@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 const config: Config = {
-  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -10,29 +9,72 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        civic: {
-          dark: "#0b0f19",
-          card: "#111827",
-          border: "#1f293d",
-          accent: "#2563eb",
-          warning: "#f59e0b",
-          critical: "#ef4444",
-          success: "#10b981",
+        eco: {
+          surface: '#f7faf4',
+          'surface-dim': '#d8dbd5',
+          'surface-bright': '#f7faf4',
+          'surface-container-lowest': '#ffffff',
+          'surface-container-low': '#f1f5ee',
+          'surface-container': '#ecefe9',
+          'surface-container-high': '#e6e9e3',
+          'surface-container-highest': '#e0e3dd',
+          'on-surface': '#181d19',
+          'on-surface-variant': '#414941',
+          'inverse-surface': '#2d312d',
+          'inverse-on-surface': '#eff2eb',
+          outline: '#717971',
+          'outline-variant': '#c1c9bf',
+          'surface-tint': '#376847',
+          primary: '#356644',
+          'on-primary': '#ffffff',
+          'primary-container': '#4d7f5b',
+          'on-primary-container': '#f6fff4',
+          'inverse-primary': '#9ed3a9',
+          secondary: '#506353',
+          'on-secondary': '#ffffff',
+          'secondary-container': '#d0e5d1',
+          'on-secondary-container': '#546757',
+          tertiary: '#556131',
+          'on-tertiary': '#ffffff',
+          'tertiary-container': '#6d7a47',
+          'on-tertiary-container': '#fbffe4',
+          error: '#ba1a1a',
+          'on-error': '#ffffff',
+          'error-container': '#ffdad6',
+          'on-error-container': '#93000a',
+          'primary-fixed': '#b9efc4',
+          'primary-fixed-dim': '#9ed3a9',
+          'on-primary-fixed': '#00210d',
+          'on-primary-fixed-variant': '#1e5030',
+          'secondary-fixed': '#d2e8d4',
+          'secondary-fixed-dim': '#b7ccb8',
+          'on-secondary-fixed': '#0d1f13',
+          'on-secondary-fixed-variant': '#384b3c',
+          'tertiary-fixed': '#dae9ac',
+          'tertiary-fixed-dim': '#bfcd92',
+          'on-tertiary-fixed': '#161f00',
+          'on-tertiary-fixed-variant': '#404b1e',
+          background: '#f7faf4',
+          'on-background': '#181d19',
+          'surface-variant': '#e0e3dd',
         },
       },
       fontFamily: {
-        mono: ["ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "Consolas", "monospace"],
+        headline: ['"Space Grotesk"', 'sans-serif'],
+        body: ['Chivo', 'sans-serif'],
+        label: ['"Atkinson Hyperlegible"', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
-      keyframes: {
-        pulseGlow: {
-          "0%, 100%": { opacity: "1" },
-          "50%": { opacity: "0.4" },
-        },
+      borderRadius: {
+        sm: '0.125rem',
+        DEFAULT: '0.25rem',
+        md: '0.375rem',
+        lg: '0.5rem',
+        xl: '0.75rem',
       },
-      animation: {
-        "pulse-glow": "pulseGlow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+      boxShadow: {
+        subtle: '0 1px 3px rgba(24, 29, 25, 0.05), 0 1px 2px rgba(24, 29, 25, 0.03)',
+        tonal: '0 4px 12px rgba(24, 29, 25, 0.06)',
       },
     },
   },
@@ -40,4 +82,3 @@ const config: Config = {
 };
 
 export default config;
-

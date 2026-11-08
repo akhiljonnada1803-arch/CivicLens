@@ -1,54 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Chivo:ital,wght@0,300..900;1,300..900&family=Space+Grotesk:wght@500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --background: 222 47% 7%;
-  --foreground: 210 40% 98%;
-  --card: 222 47% 9%;
-  --card-foreground: 210 40% 98%;
-  --border: 217 33% 17%;
-  --primary: 217 91% 60%;
-  --primary-foreground: 222 47% 11%;
-  --accent: 217 33% 17%;
-  --accent-foreground: 210 40% 98%;
-}
-
-* {
-  border-color: hsl(var(--border));
+  --background: #f7faf4;
+  --foreground: #181d19;
+  --surface: #f7faf4;
+  --surface-container-low: #f1f5ee;
+  --surface-container: #ecefe9;
+  --surface-container-high: #e6e9e3;
+  --primary: #356644;
+  --outline: #717971;
+  --outline-variant: #c1c9bf;
 }
 
 body {
-  background-color: #080c14;
-  color: #f1f5f9;
+  background-color: #f7faf4;
+  color: #181d19;
+  font-family: 'Chivo', sans-serif;
   font-feature-settings: "rlig" 1, "calt" 1;
 }
 
-/* Custom Slim Scrollbars for Executive Feeds */
+h1, h2, h3, h4, .font-headline {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+label, button, input, select, .font-label {
+  font-family: 'Atkinson Hyperlegible', sans-serif;
+}
+
+/* Custom Eco Scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0b0f19;
+  background: #ecefe9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: #c1c9bf;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #717971;
 }
-
-@keyframes scanline {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(1000%); }
-}
-
-.animate-scanline {
-  animation: scanline 8s linear infinite;
-}
-

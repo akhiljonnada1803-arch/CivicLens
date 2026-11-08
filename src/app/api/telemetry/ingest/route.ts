@@ -38,3 +38,4 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ingestion failed: " + e.message }, { status: 400 });
   }
 }
+

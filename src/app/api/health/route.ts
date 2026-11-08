@@ -18,3 +18,4 @@ export async function GET() {
     active_ward: "Ward 14 (Siripuram / Maddilapalem)",
   });
 }
+
