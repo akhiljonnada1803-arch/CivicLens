@@ -1,4 +1,6 @@
 import { NextResponse } from "next/server";
+import { addStoredIncident } from "@/lib/incidentStore";
+import { Incident } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -6,14 +8,14 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const newId = `inc-${Date.now()}`;
-    const record = {
+    const record: Incident = {
       id: newId,
       defect_type: body.defect_type || "garbage_overflow",
       severity: body.severity || "HIGH",
-      title: (body.defect_type || "hazard").replace("_", " ").toUpperCase(),
+      title: (body.title || (body.defect_type || "hazard").replace("_", " ")).toUpperCase(),
       slm_summary: body.slm_summary || "Autonomous vision verified road defect requiring municipal clearance.",
-      latitude: body.latitude || 17.7225,
-      longitude: body.longitude || 83.3045,
+      latitude: Number(body.latitude) || 17.7225,
+      longitude: Number(body.longitude) || 83.3045,
       landmark: body.landmark || "Ward 14 Central Sector",
       ward: "Ward 14 (Siripuram)",
       zone: "Zone 3 (Central)",
@@ -25,6 +27,8 @@ export async function POST(request: Request) {
       bbox: body.bounding_box ? [body.bounding_box.x1, body.bounding_box.y1, body.bounding_box.x2, body.bounding_box.y2] : [0.25, 0.45, 0.75, 0.85],
       image_url: body.image_url || "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
     };
+
+    addStoredIncident(record);
 
     return NextResponse.json({
       status: "INGESTED",
@@ -38,4 +42,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Ingestion failed: " + e.message }, { status: 400 });
   }
 }
-

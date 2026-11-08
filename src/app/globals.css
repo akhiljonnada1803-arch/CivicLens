@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400;1,700&family=Chivo:ital,wght@0,300..900;1,300..900&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "leaflet/dist/leaflet.css";
 
 @tailwind base;
 @tailwind components;
@@ -48,4 +49,27 @@ label, button, input, select, .font-label {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #717971;
+}
+
+/* Leaflet Container overrides for Eco theme */
+.leaflet-container {
+  font-family: 'Atkinson Hyperlegible', sans-serif;
+  background-color: #f1f5ee !important;
+}
+
+.custom-incident-pin, .custom-fleet-pin {
+  background: transparent !important;
+  border: none !important;
+}
+
+.leaflet-popup-content-wrapper {
+  background: #f7faf4 !important;
+  color: #181d19 !important;
+  border: 1px solid #c1c9bf !important;
+  border-radius: 0.5rem !important;
+  box-shadow: 0 4px 12px rgba(24, 29, 25, 0.08) !important;
+}
+
+.leaflet-popup-tip {
+  background: #f7faf4 !important;
 }

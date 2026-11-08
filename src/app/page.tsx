@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { KPICards } from "@/components/KPICards";
 import { MunicipalDesk } from "@/components/MunicipalDesk";
 import { ProofVault } from "@/components/ProofVault";
+import { SimulationDrawer } from "@/components/SimulationDrawer";
+import { CapExModal } from "@/components/CapExModal";
 import { api } from "@/lib/api";
 import { Incident, KPIData } from "@/lib/types";
 import {
@@ -13,111 +15,17 @@ import {
   RefreshCw,
   MapPin,
   ExternalLink,
+  DollarSign,
+  PlayCircle,
 } from "lucide-react";
-
-const INITIAL_INCIDENTS: Incident[] = [
-  {
-    id: "inc-8841-gvmc",
-    defect_type: "garbage_overflow",
-    severity: "HIGH",
-    title: "Garbage Overflow / Blackspot",
-    slm_summary: "Roadside waste partially obstructing pedestrian carriage-way along market stretch.",
-    latitude: 17.7225,
-    longitude: 83.3045,
-    landmark: "Main Market Road, Pillar 42",
-    ward: "Ward 14 (Siripuram)",
-    zone: "Zone 3 (Central)",
-    source_fleet: "Fleet A (APSRTC Bus #12)",
-    timestamp: new Date().toISOString(),
-    sync_status: "SYNCED",
-    status: "NEEDS_ACTION",
-    concessionaire: "Apex CleanTech",
-    bbox: [0.28, 0.42, 0.72, 0.85],
-    image_url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "inc-8842-gvmc",
-    defect_type: "open_manhole",
-    severity: "CRITICAL",
-    title: "Open Stormwater Manhole Hazard",
-    slm_summary: "Uncovered sewer chamber opening in active traffic lane. Critical road safety hazard.",
-    latitude: 17.7238,
-    longitude: 83.3055,
-    landmark: "Station Road Junction",
-    ward: "Ward 14 (Siripuram)",
-    zone: "Zone 3 (Central)",
-    source_fleet: "Fleet A (Police PCR #04)",
-    timestamp: new Date(Date.now() - 15 * 60000).toISOString(),
-    sync_status: "SYNCED",
-    status: "QRT_DISPATCHED",
-    concessionaire: "Apex CleanTech",
-    bbox: [0.42, 0.58, 0.58, 0.76],
-    image_url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "inc-8843-gvmc",
-    defect_type: "road_pothole",
-    severity: "MEDIUM",
-    title: "Carriageway Asphalt Pothole",
-    slm_summary: "Fractured asphalt depression measuring 0.9m across on carriage-way shoulder.",
-    latitude: 17.7248,
-    longitude: 83.3068,
-    landmark: "Siripuram Main Cross Road",
-    ward: "Ward 14 (Siripuram)",
-    zone: "Zone 3 (Central)",
-    source_fleet: "Fleet A (APSRTC Bus #07)",
-    timestamp: new Date(Date.now() - 42 * 60000).toISOString(),
-    sync_status: "SYNCED",
-    status: "NEEDS_ACTION",
-    concessionaire: "Apex CleanTech",
-    bbox: [0.35, 0.55, 0.65, 0.78],
-    image_url: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "inc-8844-gvmc",
-    defect_type: "vehicle_crash",
-    severity: "CRITICAL",
-    title: "Vehicle Collision & Rollover Spike",
-    slm_summary: "Multi-vehicle collision with moderate debris causing lane bottleneck on flyover descent.",
-    latitude: 17.7210,
-    longitude: 83.3075,
-    landmark: "Bypass Flyover Descent",
-    ward: "Ward 14 (Siripuram)",
-    zone: "Zone 3 (Central)",
-    source_fleet: "Fleet B (Tipper #02 IMU: 4.8g)",
-    timestamp: new Date(Date.now() - 75 * 60000).toISOString(),
-    sync_status: "SYNCED",
-    status: "QRT_DISPATCHED",
-    concessionaire: "Apex CleanTech",
-    bbox: [0.38, 0.52, 0.62, 0.75],
-    image_url: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "inc-8845-gvmc",
-    defect_type: "garbage_overflow",
-    severity: "HIGH",
-    title: "Market Waste Overflow (Sector 4)",
-    slm_summary: "High-density secondary waste dump spilling into active two-wheeler lane.",
-    latitude: 17.7265,
-    longitude: 83.3090,
-    landmark: "Maddilapalem Sub-way Entry",
-    ward: "Ward 14 (Siripuram)",
-    zone: "Zone 3 (Central)",
-    source_fleet: "Fleet A (Transit Bus #12)",
-    timestamp: new Date(Date.now() - 95 * 60000).toISOString(),
-    sync_status: "SYNCED",
-    status: "NEEDS_ACTION",
-    concessionaire: "Apex CleanTech",
-    bbox: [0.28, 0.42, 0.72, 0.85],
-    image_url: "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80",
-  }
-];
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"MUNICIPAL" | "CONTRACTOR">("MUNICIPAL");
-  const [incidents, setIncidents] = useState<Incident[]>(INITIAL_INCIDENTS);
+  const [incidents, setIncidents] = useState<Incident[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isSimOpen, setIsSimOpen] = useState(false);
+  const [isCapExOpen, setIsCapExOpen] = useState(false);
 
   // Calibrated to PRD Section 7 GVMC baseline
   const kpiData: KPIData = {
@@ -165,7 +73,7 @@ export default function Home() {
   return (
     <main className="h-screen w-screen flex flex-col bg-eco-surface overflow-hidden text-eco-on-surface font-body">
       {/* Top Navigation & Executive Header */}
-      <header className="bg-eco-surface-container-lowest border-b border-eco-outline-variant/70 px-6 py-3 flex flex-wrap items-center justify-between gap-4 select-none flex-shrink-0 shadow-subtle">
+      <header className="bg-eco-surface-container-lowest border-b border-eco-outline-variant/70 px-5 py-3 flex flex-wrap items-center justify-between gap-3 select-none flex-shrink-0 shadow-subtle">
         {/* Brand Identity */}
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 rounded-xl bg-eco-primary-container text-eco-on-primary-container flex items-center justify-center shadow-subtle">
@@ -196,7 +104,7 @@ export default function Home() {
         <div className="flex items-center bg-eco-surface-container p-1 rounded-lg border border-eco-outline-variant/60 shadow-inner">
           <button
             onClick={() => setActiveTab("MUNICIPAL")}
-            className={`px-4 py-2 rounded-md text-xs font-label font-bold transition-all flex items-center space-x-2 ${
+            className={`px-4 py-1.5 rounded-md text-xs font-label font-bold transition-all flex items-center space-x-2 ${
               activeTab === "MUNICIPAL"
                 ? "bg-eco-primary text-eco-on-primary shadow-sm"
                 : "text-eco-on-surface-variant hover:text-eco-on-surface hover:bg-eco-surface-container-high"
@@ -207,7 +115,7 @@ export default function Home() {
           </button>
           <button
             onClick={() => setActiveTab("CONTRACTOR")}
-            className={`px-4 py-2 rounded-md text-xs font-label font-bold transition-all flex items-center space-x-2 ${
+            className={`px-4 py-1.5 rounded-md text-xs font-label font-bold transition-all flex items-center space-x-2 ${
               activeTab === "CONTRACTOR"
                 ? "bg-eco-tertiary text-eco-on-tertiary shadow-sm"
                 : "text-eco-on-surface-variant hover:text-eco-on-surface hover:bg-eco-surface-container-high"
@@ -220,6 +128,25 @@ export default function Home() {
 
         {/* Right Actions */}
         <div className="flex items-center space-x-2 font-label">
+          {/* CapEx Calculator Modal Button */}
+          <button
+            onClick={() => setIsCapExOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-eco-secondary-container hover:bg-eco-secondary-container/80 text-eco-on-secondary-container border border-eco-secondary/30 text-xs font-semibold shadow-subtle transition-all"
+          >
+            <DollarSign className="w-3.5 h-3.5 text-eco-secondary" />
+            <span>CapEx Calculator</span>
+          </button>
+
+          {/* Simulate Edge Patrol Drawer Button */}
+          <button
+            onClick={() => setIsSimOpen(true)}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-eco-primary hover:bg-eco-primary-container text-eco-on-primary text-xs font-bold shadow-subtle transition-all"
+          >
+            <PlayCircle className="w-3.5 h-3.5" />
+            <span>Simulate Edge Patrol</span>
+          </button>
+
+          {/* Refresh Live Data */}
           <button
             onClick={loadData}
             disabled={isRefreshing}
@@ -228,14 +155,16 @@ export default function Home() {
           >
             <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-eco-primary" : ""}`} />
           </button>
+
+          {/* API Health Check */}
           <a
             href="/api/health"
             target="_blank"
             rel="noreferrer"
-            className="px-3.5 py-1.5 rounded-lg bg-eco-surface-container hover:bg-eco-surface-container-high border border-eco-outline-variant text-xs text-eco-on-surface font-semibold flex items-center space-x-1.5 shadow-subtle"
+            className="px-3 py-1.5 rounded-lg bg-eco-surface-container hover:bg-eco-surface-container-high border border-eco-outline-variant text-xs text-eco-on-surface font-semibold flex items-center space-x-1 shadow-subtle"
           >
-            <span>API Health Check</span>
-            <ExternalLink className="w-3.5 h-3.5 text-eco-outline" />
+            <span>API Health</span>
+            <ExternalLink className="w-3 h-3 text-eco-outline" />
           </a>
         </div>
       </header>
@@ -252,6 +181,19 @@ export default function Home() {
           <ProofVault />
         )}
       </div>
+
+      {/* Interactive Simulation Drawer */}
+      <SimulationDrawer
+        isOpen={isSimOpen}
+        onClose={() => setIsSimOpen(false)}
+        onSimulationSuccess={loadData}
+      />
+
+      {/* Operational Economics & CapEx Audit Modal */}
+      <CapExModal
+        isOpen={isCapExOpen}
+        onClose={() => setIsCapExOpen(false)}
+      />
     </main>
   );
 }
