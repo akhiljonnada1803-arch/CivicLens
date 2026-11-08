@@ -295,3 +295,4 @@ export const LiveMapInner: React.FC<LiveMapProps> = ({
     </div>
   );
 };
+

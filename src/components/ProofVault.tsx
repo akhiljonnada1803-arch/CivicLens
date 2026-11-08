@@ -105,9 +105,11 @@ export const ProofVault: React.FC = () => {
       const data = await api.getContractorAudits();
       if (data && data.audits && data.audits.length > 0) {
         setRecords(data.audits);
-        if (!selectedRecord) {
-          setSelectedRecord(data.audits[0]);
-        }
+        setSelectedRecord((prev) => {
+          if (!prev) return data.audits[0];
+          const match = data.audits.find((a: ContractorAuditRecord) => a.job_id === prev.job_id);
+          return match || data.audits[0];
+        });
       }
     } catch (e) {
       console.warn("Using offline audit records baseline:", e);

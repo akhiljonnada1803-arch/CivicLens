@@ -17,6 +17,7 @@ export const BENCHMARK_INCIDENTS: Incident[] = [
     sync_status: "SYNCED",
     status: "NEEDS_ACTION",
     concessionaire: "Apex CleanTech",
+    sighting_count: 1,
     bbox: [0.28, 0.42, 0.72, 0.85],
     image_url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
   },
@@ -36,6 +37,7 @@ export const BENCHMARK_INCIDENTS: Incident[] = [
     sync_status: "SYNCED",
     status: "QRT_DISPATCHED",
     concessionaire: "Apex CleanTech",
+    sighting_count: 1,
     bbox: [0.42, 0.58, 0.58, 0.76],
     image_url: "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?auto=format&fit=crop&w=800&q=80",
   },
@@ -55,6 +57,7 @@ export const BENCHMARK_INCIDENTS: Incident[] = [
     sync_status: "SYNCED",
     status: "NEEDS_ACTION",
     concessionaire: "Apex CleanTech",
+    sighting_count: 1,
     bbox: [0.35, 0.55, 0.65, 0.78],
     image_url: "https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80",
   },
@@ -74,6 +77,7 @@ export const BENCHMARK_INCIDENTS: Incident[] = [
     sync_status: "SYNCED",
     status: "QRT_DISPATCHED",
     concessionaire: "Apex CleanTech",
+    sighting_count: 1,
     bbox: [0.38, 0.52, 0.62, 0.75],
     image_url: "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&w=800&q=80",
   },
@@ -93,6 +97,7 @@ export const BENCHMARK_INCIDENTS: Incident[] = [
     sync_status: "SYNCED",
     status: "NEEDS_ACTION",
     concessionaire: "Apex CleanTech",
+    sighting_count: 2,
     bbox: [0.28, 0.42, 0.72, 0.85],
     image_url: "https://images.unsplash.com/photo-1530587191325-3db32d826c18?auto=format&fit=crop&w=800&q=80",
   },
@@ -112,6 +117,7 @@ export const BENCHMARK_INCIDENTS: Incident[] = [
     sync_status: "SYNCED",
     status: "NEEDS_ACTION",
     concessionaire: "Apex CleanTech",
+    sighting_count: 1,
     bbox: [0.30, 0.45, 0.70, 0.85],
     image_url: "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
   }
@@ -119,6 +125,12 @@ export const BENCHMARK_INCIDENTS: Incident[] = [
 
 // In-memory runtime store
 let memoryIncidents: Incident[] = [...BENCHMARK_INCIDENTS];
+
+function calculateDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const dLat = (lat2 - lat1) * 111000;
+  const dLon = (lon2 - lon1) * 111000 * Math.cos((lat1 * Math.PI) / 180);
+  return Math.sqrt(dLat * dLat + dLon * dLon);
+}
 
 export function getStoredIncidents(severity?: string | null): Incident[] {
   if (severity && severity !== "ALL") {
@@ -139,9 +151,30 @@ export function updateStoredIncidentStatus(id: string, status: any): Incident | 
   return null;
 }
 
-export function addStoredIncident(incident: Incident): Incident {
-  memoryIncidents = [incident, ...memoryIncidents];
-  return incident;
+export function ingestOrDeduplicateIncident(incoming: Incident): { is_duplicate: boolean; record: Incident } {
+  // PRD 15m Proximity Check
+  const duplicate = memoryIncidents.find((existing) => {
+    if (existing.status === "RESOLVED") return false;
+    if (existing.defect_type !== incoming.defect_type) return false;
+    const distance = calculateDistanceMeters(
+      existing.latitude,
+      existing.longitude,
+      incoming.latitude,
+      incoming.longitude
+    );
+    return distance <= 15.0; // 15 meters
+  });
+
+  if (duplicate) {
+    duplicate.sighting_count = (duplicate.sighting_count || 1) + 1;
+    duplicate.timestamp = new Date().toISOString();
+    return { is_duplicate: true, record: duplicate };
+  }
+
+  // Not a duplicate: Add as new incident
+  incoming.sighting_count = 1;
+  memoryIncidents = [incoming, ...memoryIncidents];
+  return { is_duplicate: false, record: incoming };
 }
 
 export function resetStoredIncidents(): Incident[] {

@@ -164,3 +164,4 @@ export const CapExModal: React.FC<CapExModalProps> = ({ isOpen, onClose }) => {
     </div>
   );
 };
+

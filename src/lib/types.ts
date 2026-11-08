@@ -16,6 +16,7 @@ export interface Incident {
   sync_status: string;
   status: "NEEDS_ACTION" | "QRT_DISPATCHED" | "RESOLVED" | "FALSE_ALARM";
   concessionaire: string;
+  sighting_count?: number;
   bbox?: [number, number, number, number];
   image_url: string;
 }

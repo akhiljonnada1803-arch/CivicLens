@@ -53,7 +53,8 @@ export const MunicipalDesk: React.FC<MunicipalDeskProps> = ({ incidents, onRefre
     return true;
   });
 
-  const active = selectedIncident || filtered[0] || incidents[0];
+  const isSelectedInFiltered = filtered.some((i) => i.id === selectedIncident?.id);
+  const active = (isSelectedInFiltered ? selectedIncident : filtered[0]) || incidents[0];
 
   const handleUpdateStatus = async (status: string, notes?: string) => {
     if (!active) return;

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { addStoredIncident } from "@/lib/incidentStore";
+import { ingestOrDeduplicateIncident } from "@/lib/incidentStore";
 import { Incident } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -28,15 +28,27 @@ export async function POST(request: Request) {
       image_url: body.image_url || "https://images.unsplash.com/photo-1618477461853-cf6ed80faba5?auto=format&fit=crop&w=800&q=80",
     };
 
-    addStoredIncident(record);
+    const { is_duplicate, record: finalRecord } = ingestOrDeduplicateIncident(record);
+
+    if (is_duplicate) {
+      return NextResponse.json({
+        status: "DEDUPLICATED",
+        is_duplicate: true,
+        ticket_id: finalRecord.id,
+        sighting_count: finalRecord.sighting_count,
+        message: `🎯 15m Proximity deduplication hit: Sighting count incremented to ${finalRecord.sighting_count}x. Duplicate alert suppressed to prevent officer fatigue.`,
+        record: finalRecord,
+      }, { status: 200 });
+    }
 
     return NextResponse.json({
       status: "INGESTED",
+      is_duplicate: false,
       ticket_id: newId,
       assigned_concessionaire: "Apex CleanTech",
       ward_resolved: "Ward 14 (Siripuram)",
-      message: `Hazard successfully ingested from ${record.source_fleet}. Dispatched to Apex CleanTech QRT route.`,
-      record,
+      message: `🚨 Hazard successfully ingested from ${record.source_fleet}. Dispatched to Apex CleanTech QRT route.`,
+      record: finalRecord,
     }, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: "Ingestion failed: " + e.message }, { status: 400 });

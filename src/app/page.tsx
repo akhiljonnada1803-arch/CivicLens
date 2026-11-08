@@ -8,6 +8,7 @@ import { SimulationDrawer } from "@/components/SimulationDrawer";
 import { CapExModal } from "@/components/CapExModal";
 import { api } from "@/lib/api";
 import { Incident, KPIData } from "@/lib/types";
+import { BENCHMARK_INCIDENTS } from "@/lib/incidentStore";
 import {
   ShieldAlert,
   Building2,
@@ -21,7 +22,7 @@ import {
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<"MUNICIPAL" | "CONTRACTOR">("MUNICIPAL");
-  const [incidents, setIncidents] = useState<Incident[]>([]);
+  const [incidents, setIncidents] = useState<Incident[]>(BENCHMARK_INCIDENTS);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isSimOpen, setIsSimOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function Home() {
 
   // Calibrated to PRD Section 7 GVMC baseline
   const kpiData: KPIData = {
-    unresolved_spills: incidents.filter((i) => i.status !== "RESOLVED").length || 11,
+    unresolved_spills: incidents.filter((i) => i.status !== "RESOLVED").length,
     active_fleets_total: 170,
     fleet_a_scanners: 120,
     fleet_b_cleaners: 50,
@@ -41,7 +42,7 @@ export default function Home() {
     try {
       setIsRefreshing(true);
       const list = await api.getIncidents();
-      if (list && list.length > 0) {
+      if (Array.isArray(list)) {
         setIncidents(list);
       }
     } catch (e) {

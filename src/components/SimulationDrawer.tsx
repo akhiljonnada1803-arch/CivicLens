@@ -63,7 +63,11 @@ export const SimulationDrawer: React.FC<SimulationDrawerProps> = ({
         slm_summary: slm,
       };
       const res = await api.ingestTelemetry(payload);
-      addLog(`🚨 TICKET ${res.ticket_id}: Ingested & dispatched to ${res.assigned_concessionaire}.`);
+      if (res.is_duplicate) {
+        addLog(`🎯 DEDUPLICATION HIT (${res.ticket_id}): Sighting count ${res.sighting_count}x. Duplicate alert suppressed.`);
+      } else {
+        addLog(`🚨 NEW TICKET ${res.ticket_id}: Ingested & dispatched to ${res.assigned_concessionaire}.`);
+      }
       onSimulationSuccess();
     } catch (e: any) {
       addLog(`❌ Ingestion failed: ${e.message}`);
@@ -263,3 +267,4 @@ export const SimulationDrawer: React.FC<SimulationDrawerProps> = ({
     </div>
   );
 };
+

@@ -55,6 +55,9 @@ label, button, input, select, .font-label {
 .leaflet-container {
   font-family: 'Atkinson Hyperlegible', sans-serif;
   background-color: #f1f5ee !important;
+  width: 100% !important;
+  height: 100% !important;
+  min-height: 100% !important;
 }
 
 .custom-incident-pin, .custom-fleet-pin {
